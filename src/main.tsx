@@ -45,13 +45,13 @@ const rootElement = document.getElementById("app")!;
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
-    <>
+    <StrictMode>
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <App />
           <Toaster closeButton position="top-right" />
         </QueryClientProvider>
       </ThemeProvider>
-    </>,
+    </StrictMode>,
   );
 }

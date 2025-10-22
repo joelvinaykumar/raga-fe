@@ -8,181 +8,156 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as LayoutRouteImport } from './routes/_layout'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as PokemonIndexRouteImport } from './routes/pokemon/index'
-import { Route as LayoutChatIndexRouteImport } from './routes/_layout/chat/index'
-import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account/index'
-import { Route as LayoutChatSessionIdIndexRouteImport } from './routes/_layout/chat/$sessionId/index'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as LoginRouteImport } from "./routes/login";
+import { Route as LayoutRouteImport } from "./routes/_layout";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as LayoutChatIndexRouteImport } from "./routes/_layout/chat/index";
+import { Route as LayoutAccountIndexRouteImport } from "./routes/_layout/account/index";
+import { Route as LayoutChatSessionIdIndexRouteImport } from "./routes/_layout/chat/$sessionId/index";
 
 const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+  id: "/login",
+  path: "/login",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const LayoutRoute = LayoutRouteImport.update({
-  id: '/_layout',
+  id: "/_layout",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const PokemonIndexRoute = PokemonIndexRouteImport.update({
-  id: '/pokemon/',
-  path: '/pokemon/',
-  getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const LayoutChatIndexRoute = LayoutChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
+  id: "/chat/",
+  path: "/chat/",
   getParentRoute: () => LayoutRoute,
-} as any)
+} as any);
 const LayoutAccountIndexRoute = LayoutAccountIndexRouteImport.update({
-  id: '/account/',
-  path: '/account/',
+  id: "/account/",
+  path: "/account/",
   getParentRoute: () => LayoutRoute,
-} as any)
+} as any);
 const LayoutChatSessionIdIndexRoute =
   LayoutChatSessionIdIndexRouteImport.update({
-    id: '/chat/$sessionId/',
-    path: '/chat/$sessionId/',
+    id: "/chat/$sessionId/",
+    path: "/chat/$sessionId/",
     getParentRoute: () => LayoutRoute,
-  } as any)
+  } as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/pokemon': typeof PokemonIndexRoute
-  '/account': typeof LayoutAccountIndexRoute
-  '/chat': typeof LayoutChatIndexRoute
-  '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
+  "/": typeof IndexRoute;
+  "/login": typeof LoginRoute;
+  "/account": typeof LayoutAccountIndexRoute;
+  "/chat": typeof LayoutChatIndexRoute;
+  "/chat/$sessionId": typeof LayoutChatSessionIdIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/pokemon': typeof PokemonIndexRoute
-  '/account': typeof LayoutAccountIndexRoute
-  '/chat': typeof LayoutChatIndexRoute
-  '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
+  "/": typeof IndexRoute;
+  "/login": typeof LoginRoute;
+  "/account": typeof LayoutAccountIndexRoute;
+  "/chat": typeof LayoutChatIndexRoute;
+  "/chat/$sessionId": typeof LayoutChatSessionIdIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/_layout': typeof LayoutRouteWithChildren
-  '/login': typeof LoginRoute
-  '/pokemon/': typeof PokemonIndexRoute
-  '/_layout/account/': typeof LayoutAccountIndexRoute
-  '/_layout/chat/': typeof LayoutChatIndexRoute
-  '/_layout/chat/$sessionId/': typeof LayoutChatSessionIdIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/_layout": typeof LayoutRouteWithChildren;
+  "/login": typeof LoginRoute;
+  "/_layout/account/": typeof LayoutAccountIndexRoute;
+  "/_layout/chat/": typeof LayoutChatIndexRoute;
+  "/_layout/chat/$sessionId/": typeof LayoutChatSessionIdIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/login'
-    | '/pokemon'
-    | '/account'
-    | '/chat'
-    | '/chat/$sessionId'
-  fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/pokemon' | '/account' | '/chat' | '/chat/$sessionId'
+  fileRoutesByFullPath: FileRoutesByFullPath;
+  fullPaths: "/" | "/login" | "/account" | "/chat" | "/chat/$sessionId";
+  fileRoutesByTo: FileRoutesByTo;
+  to: "/" | "/login" | "/account" | "/chat" | "/chat/$sessionId";
   id:
-    | '__root__'
-    | '/'
-    | '/_layout'
-    | '/login'
-    | '/pokemon/'
-    | '/_layout/account/'
-    | '/_layout/chat/'
-    | '/_layout/chat/$sessionId/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/_layout"
+    | "/login"
+    | "/_layout/account/"
+    | "/_layout/chat/"
+    | "/_layout/chat/$sessionId/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  LayoutRoute: typeof LayoutRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  PokemonIndexRoute: typeof PokemonIndexRoute
+  IndexRoute: typeof IndexRoute;
+  LayoutRoute: typeof LayoutRouteWithChildren;
+  LoginRoute: typeof LoginRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_layout': {
-      id: '/_layout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof LayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pokemon/': {
-      id: '/pokemon/'
-      path: '/pokemon'
-      fullPath: '/pokemon'
-      preLoaderRoute: typeof PokemonIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_layout/chat/': {
-      id: '/_layout/chat/'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof LayoutChatIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/account/': {
-      id: '/_layout/account/'
-      path: '/account'
-      fullPath: '/account'
-      preLoaderRoute: typeof LayoutAccountIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
-    '/_layout/chat/$sessionId/': {
-      id: '/_layout/chat/$sessionId/'
-      path: '/chat/$sessionId'
-      fullPath: '/chat/$sessionId'
-      preLoaderRoute: typeof LayoutChatSessionIdIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
+    "/login": {
+      id: "/login";
+      path: "/login";
+      fullPath: "/login";
+      preLoaderRoute: typeof LoginRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/_layout": {
+      id: "/_layout";
+      path: "";
+      fullPath: "";
+      preLoaderRoute: typeof LayoutRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/_layout/chat/": {
+      id: "/_layout/chat/";
+      path: "/chat";
+      fullPath: "/chat";
+      preLoaderRoute: typeof LayoutChatIndexRouteImport;
+      parentRoute: typeof LayoutRoute;
+    };
+    "/_layout/account/": {
+      id: "/_layout/account/";
+      path: "/account";
+      fullPath: "/account";
+      preLoaderRoute: typeof LayoutAccountIndexRouteImport;
+      parentRoute: typeof LayoutRoute;
+    };
+    "/_layout/chat/$sessionId/": {
+      id: "/_layout/chat/$sessionId/";
+      path: "/chat/$sessionId";
+      fullPath: "/chat/$sessionId";
+      preLoaderRoute: typeof LayoutChatSessionIdIndexRouteImport;
+      parentRoute: typeof LayoutRoute;
+    };
   }
 }
 
 interface LayoutRouteChildren {
-  LayoutAccountIndexRoute: typeof LayoutAccountIndexRoute
-  LayoutChatIndexRoute: typeof LayoutChatIndexRoute
-  LayoutChatSessionIdIndexRoute: typeof LayoutChatSessionIdIndexRoute
+  LayoutAccountIndexRoute: typeof LayoutAccountIndexRoute;
+  LayoutChatIndexRoute: typeof LayoutChatIndexRoute;
+  LayoutChatSessionIdIndexRoute: typeof LayoutChatSessionIdIndexRoute;
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAccountIndexRoute: LayoutAccountIndexRoute,
   LayoutChatIndexRoute: LayoutChatIndexRoute,
   LayoutChatSessionIdIndexRoute: LayoutChatSessionIdIndexRoute,
-}
+};
 
 const LayoutRouteWithChildren =
-  LayoutRoute._addFileChildren(LayoutRouteChildren)
+  LayoutRoute._addFileChildren(LayoutRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
   LoginRoute: LoginRoute,
-  PokemonIndexRoute: PokemonIndexRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

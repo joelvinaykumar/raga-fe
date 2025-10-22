@@ -1,10 +1,5 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
-import {
-  Outlet,
-  createRootRouteWithContext,
-  redirect,
-} from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
+import { Outlet, createRootRouteWithContext } from "@tanstack/react-router";
 
 interface AuthState {
   isAuthenticated: boolean;

@@ -41,15 +41,11 @@ export function LoginForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      await login(values);
-    } catch (error) {}
+    await login(values);
   };
 
   const onGoogleLogin = async () => {
-    try {
-      await loginWithGoogle();
-    } catch (error) {}
+    await loginWithGoogle();
   };
 
   return (
