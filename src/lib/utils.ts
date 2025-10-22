@@ -51,3 +51,19 @@ export const mapTypeColor = (type: string) => {
 			return 'bg-cyan-400';
 	}
 };
+
+export const generateSessionId = () => {
+	return Math.random().toString(36).substring(2, 12)
+}
+
+export const humanReadableSize = (numBytes: number): string =>{
+  if (numBytes < 1024) {
+    return `${numBytes} B`;
+  } else if (numBytes < 1024 ** 2) {
+    const kb = numBytes / 1024;
+    return `${kb.toFixed(2)} KB`;
+  } else {
+    const mb = numBytes / (1024 ** 2);
+    return `${mb.toFixed(2)} MB`;
+  }
+}
