@@ -5,10 +5,13 @@ import { defineConfig } from "vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [react(), TanStackRouterVite()],
-    resolve: {
-        alias: {
-            "@": path.resolve(__dirname, "./src")
-        }
-    }
+  plugins: [react(), TanStackRouterVite()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  server: {
+    port: Number(process.env.PORT) || 3000, // Change 3000 to your desired port
+  },
 });
