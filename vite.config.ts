@@ -11,7 +11,4 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    port: Number(process.env.PORT) || 3000, // Change 3000 to your desired port
-  },
 });
