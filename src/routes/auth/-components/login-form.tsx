@@ -45,7 +45,11 @@ export function LoginForm({
   };
 
   const onGoogleLogin = async () => {
-    await loginWithGoogle();
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error("google error => ", error);
+    }
   };
 
   return (

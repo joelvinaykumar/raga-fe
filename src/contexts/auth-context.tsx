@@ -58,14 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loginWithGoogle = async () => {
     try {
-      const res = await supabase.auth.signInWithOAuth({ provider: "google" });
-      if (res.data) {
-        window.location.href = "/";
-      }
-
-      if (res.error) {
-        console.error("Error signing in with google => ", res.error);
-      }
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+      });
     } catch (error) {
       console.error("Error signing in with google => ", error);
     }
