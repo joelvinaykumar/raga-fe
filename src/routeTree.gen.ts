@@ -12,6 +12,8 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as LayoutKnowledgeBaseIndexRouteImport } from './routes/_layout/knowledge-base/index'
 import { Route as LayoutChatIndexRouteImport } from './routes/_layout/chat/index'
 import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account/index'
 import { Route as LayoutChatSessionIdIndexRouteImport } from './routes/_layout/chat/$sessionId/index'
@@ -30,6 +32,17 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LayoutKnowledgeBaseIndexRoute =
+  LayoutKnowledgeBaseIndexRouteImport.update({
+    id: '/knowledge-base/',
+    path: '/knowledge-base/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutChatIndexRoute = LayoutChatIndexRouteImport.update({
   id: '/chat/',
   path: '/chat/',
@@ -50,15 +63,19 @@ const LayoutChatSessionIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/account': typeof LayoutAccountIndexRoute
   '/chat': typeof LayoutChatIndexRoute
+  '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
   '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/account': typeof LayoutAccountIndexRoute
   '/chat': typeof LayoutChatIndexRoute
+  '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
   '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
 }
 export interface FileRoutesById {
@@ -66,22 +83,40 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_layout/account/': typeof LayoutAccountIndexRoute
   '/_layout/chat/': typeof LayoutChatIndexRoute
+  '/_layout/knowledge-base/': typeof LayoutKnowledgeBaseIndexRoute
   '/_layout/chat/$sessionId/': typeof LayoutChatSessionIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/account' | '/chat' | '/chat/$sessionId'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/auth/callback'
+    | '/account'
+    | '/chat'
+    | '/knowledge-base'
+    | '/chat/$sessionId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/account' | '/chat' | '/chat/$sessionId'
+  to:
+    | '/'
+    | '/login'
+    | '/auth/callback'
+    | '/account'
+    | '/chat'
+    | '/knowledge-base'
+    | '/chat/$sessionId'
   id:
     | '__root__'
     | '/'
     | '/_layout'
     | '/login'
+    | '/auth/callback'
     | '/_layout/account/'
     | '/_layout/chat/'
+    | '/_layout/knowledge-base/'
     | '/_layout/chat/$sessionId/'
   fileRoutesById: FileRoutesById
 }
@@ -89,6 +124,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRouteWithChildren
   LoginRoute: typeof LoginRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -113,6 +149,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_layout/knowledge-base/': {
+      id: '/_layout/knowledge-base/'
+      path: '/knowledge-base'
+      fullPath: '/knowledge-base'
+      preLoaderRoute: typeof LayoutKnowledgeBaseIndexRouteImport
+      parentRoute: typeof LayoutRoute
     }
     '/_layout/chat/': {
       id: '/_layout/chat/'
@@ -141,12 +191,14 @@ declare module '@tanstack/react-router' {
 interface LayoutRouteChildren {
   LayoutAccountIndexRoute: typeof LayoutAccountIndexRoute
   LayoutChatIndexRoute: typeof LayoutChatIndexRoute
+  LayoutKnowledgeBaseIndexRoute: typeof LayoutKnowledgeBaseIndexRoute
   LayoutChatSessionIdIndexRoute: typeof LayoutChatSessionIdIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutAccountIndexRoute: LayoutAccountIndexRoute,
   LayoutChatIndexRoute: LayoutChatIndexRoute,
+  LayoutKnowledgeBaseIndexRoute: LayoutKnowledgeBaseIndexRoute,
   LayoutChatSessionIdIndexRoute: LayoutChatSessionIdIndexRoute,
 }
 
@@ -157,6 +209,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
   LoginRoute: LoginRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

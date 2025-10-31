@@ -4,7 +4,14 @@ import * as React from "react";
 import { AxiosResponse } from "axios";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Ellipsis, Feather, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  DatabaseZap,
+  Ellipsis,
+  Feather,
+  Loader2,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -60,6 +67,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       onSuccess: (_, ctx) => {
         queryClient.invalidateQueries({ queryKey: ["list-sessions"] });
         toast.success(`Deleted session ${ctx}`);
+        setDeleteModalVisible({ open: false, id: "" });
+
+        if (location.pathname === `/chat/${ctx}`) {
+          window.location.href = "/chat";
+        }
       },
     });
 
@@ -90,6 +102,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Link to="/chat">
                   <Plus className="size-4 mr-1" />
                   New Chat
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                isActive={location.pathname === `/knowledge-base`}
+                className="text-link"
+              >
+                <Link to="/knowledge-base">
+                  <DatabaseZap />
+                  Knowledge Base
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

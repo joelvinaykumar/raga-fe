@@ -36,8 +36,12 @@ export function NavUser() {
   const { theme, setTheme } = useTheme();
   const { current_user, logout } = useAuth();
 
-  const user = {
+  const user: Record<string, string | undefined> = {
     name: current_user?.user_metadata?.full_name,
+    initials: (current_user?.user_metadata?.full_name || current_user?.email)
+      ?.split(current_user?.user_metadata?.full_name ? " " : "@")
+      ?.map((w: string) => w[0].toUpperCase())
+      .join(""),
     email: current_user?.email,
     avatar: current_user?.user_metadata?.avatar_url ?? "/avatars/shadcn.jpg",
   };
@@ -57,8 +61,8 @@ export function NavUser() {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage src={user.avatar} alt={user.name} />
-                <AvatarFallback className="rounded-lg bg-neutral-300">
-                  CN
+                <AvatarFallback className="rounded-lg text-primary bg-neutral-300">
+                  {user.initials}
                 </AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -78,7 +82,9 @@ export function NavUser() {
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="rounded-lg">CN</AvatarFallback>
+                  <AvatarFallback className="rounded-lg text-primary dark:text-secondary">
+                    {user?.initials}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>

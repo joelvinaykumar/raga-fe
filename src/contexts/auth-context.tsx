@@ -60,6 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await supabase.auth.signInWithOAuth({
         provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
       });
     } catch (error) {
       console.error("Error signing in with google => ", error);
@@ -79,12 +86,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log({ session });
       setIsAuthenticated(!!session);
       if (session?.user) setCurrentUser(session?.user);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  console.log({ current_user });
 
   return (
     <AuthContext.Provider

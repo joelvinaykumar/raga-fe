@@ -18,6 +18,7 @@ function RouteComponent() {
   const location = useLocation();
   const queryClient = useQueryClient();
   const { sessionId } = Route.useParams();
+  const stateQuery = location.state?.query;
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -107,12 +108,11 @@ function RouteComponent() {
       },
     ]);
     setTimeout(scrollToBottom, 100);
-    queryClient.invalidateQueries({ queryKey: ["list-sessions"] });
   };
 
   useEffect(() => {
-    Promise.all([refetchDocs(), fetchChatHistory()]).then(
-      ([_, chatHistoryRes]) => {
+    Promise.all([refetchDocs(), fetchChatHistory()])
+      .then(([_, chatHistoryRes]) => {
         setMessages(chatHistoryRes.data);
         setTimeout(
           () =>
@@ -121,19 +121,19 @@ function RouteComponent() {
             }),
           100,
         );
-      },
-    );
-  }, [fetchDocs, fetchChatHistory, sessionId]);
-
-  useEffect(() => {
-    if (location.state?.query?.length > 0) {
-      onSubmit(location.state?.query);
-    }
+      })
+      .then(() => {
+        if (stateQuery && stateQuery?.length > 0) {
+          onSubmit(stateQuery).then(() =>
+            queryClient.invalidateQueries({ queryKey: ["list-sessions"] }),
+          );
+        }
+      });
 
     return () => {
       window.history.replaceState({}, "", window.location.pathname);
     };
-  }, [location.state?.query]);
+  }, [fetchDocs, fetchChatHistory, sessionId, stateQuery]);
 
   return (
     <div className="w-full h-full flex justify-center">

@@ -66,7 +66,6 @@ export const ChatInput: React.FC<IChatInput> = ({
     useMutation({
       mutationKey: ["upload-attachment"],
       mutationFn: ({ file }: { file: File }) => {
-        console.log("hhhh", file);
         const formData = new FormData();
         formData.append("file", file);
         return axios.post(`/upload-doc/${session_id}`, formData, {
