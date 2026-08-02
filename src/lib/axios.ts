@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { BASE_URL, DEFAULT_ERROR_MESSAGE } from "./constants";
 import { toast } from "sonner";
 import { supabase } from "@/lib/database";
@@ -10,16 +10,13 @@ const instance = axios.create({
 });
 
 instance.interceptors.request.use(
-  async (config: AxiosRequestConfig) => {
+  async (config: InternalAxiosRequestConfig) => {
     const {
       data: { session },
     } = await supabase.auth.getSession();
     const token = session?.access_token;
     if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
