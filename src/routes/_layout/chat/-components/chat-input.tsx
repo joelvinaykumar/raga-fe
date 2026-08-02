@@ -198,6 +198,7 @@ export const ChatInput: React.FC<IChatInput> = ({
           </div>
           <Button
             size="icon-sm"
+            type="button"
             className="rounded-full"
             disabled={
               query?.length === 0 ||
@@ -205,7 +206,7 @@ export const ChatInput: React.FC<IChatInput> = ({
               isUploadingAttachment ||
               isDeletingAttachment
             }
-            onClick={onSubmit}
+            onClick={() => onSubmit()}
           >
             {loading || isUploadingAttachment || isDeletingAttachment ? (
               <Loader className="size-4 animate-spin" />
@@ -229,6 +230,7 @@ export const ChatInput: React.FC<IChatInput> = ({
           </AlertDialogHeader>
           <AlertDialogCancel>Close</AlertDialogCancel>
           <Button
+            type="button"
             className="bg-destructive"
             disabled={isDeletingAttachment}
             onClick={() => deleteAttachment(deleteModalVisible.id)}

@@ -25,6 +25,7 @@ function RouteComponent() {
   const stateQuery = location.state?.query;
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const initialQuerySubmittedRef = useRef<string | null>(null);
 
   const [query, setQuery] = useState<string>("");
   const [model, setModel] = useState<Model>("gpt-4o-mini");
@@ -81,6 +82,7 @@ function RouteComponent() {
     });
 
   const onSubmit = async (message?: string) => {
+    if (isStreaming) return;
     const content = message ?? query;
     setQuery("");
     setMessages((prev) => [
@@ -174,9 +176,12 @@ function RouteComponent() {
   };
 
   useEffect(() => {
-    Promise.all([refetchDocs(), fetchChatHistory()])
+    let cancelled = false;
+
+    Promise.all([refetchDocs(), fetchChatHistory().catch(() => null)])
       .then(([_, chatHistoryRes]) => {
-        setMessages(chatHistoryRes.data);
+        if (cancelled) return;
+        if (chatHistoryRes?.data) setMessages(chatHistoryRes.data);
         setTimeout(
           () =>
             scrollRef.current?.scrollIntoView({
@@ -186,7 +191,12 @@ function RouteComponent() {
         );
       })
       .then(() => {
-        if (stateQuery && stateQuery?.length > 0) {
+        if (cancelled) return;
+        if (
+          stateQuery?.length > 0 &&
+          initialQuerySubmittedRef.current !== sessionId
+        ) {
+          initialQuerySubmittedRef.current = sessionId;
           onSubmit(stateQuery).then(() =>
             queryClient.invalidateQueries({
               queryKey: ["list-sessions"],
@@ -196,6 +206,7 @@ function RouteComponent() {
       });
 
     return () => {
+      cancelled = true;
       window.history.replaceState({}, "", window.location.pathname);
     };
   }, [fetchDocs, fetchChatHistory, sessionId, stateQuery]);
