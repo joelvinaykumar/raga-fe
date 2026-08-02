@@ -1,8 +1,18 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { supabase } from "@/lib/database";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { Feather } from "lucide-react";
 import { LoginForm } from "./auth/-components/login-form";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session) {
+      throw redirect({ to: "/" });
+    }
+  },
   component: RouteComponent,
 });
 

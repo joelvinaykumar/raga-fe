@@ -80,7 +80,7 @@
 				"useValidTypeof": "error"
 			}
 		},
-		"ignore": ["**/dist", "**/.eslintrc.cjs", "routeTree.gen.ts"]
+	  "ignore": ["dist", "**/.eslintrc.cjs", "routeTree.gen.ts"]
 	},
 	"javascript": {
 		"formatter": {

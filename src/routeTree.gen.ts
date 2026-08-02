@@ -16,6 +16,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as LayoutKnowledgeBaseIndexRouteImport } from './routes/_layout/knowledge-base/index'
 import { Route as LayoutChatIndexRouteImport } from './routes/_layout/chat/index'
 import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account/index'
+import { Route as LayoutKnowledgeBaseKbIdIndexRouteImport } from './routes/_layout/knowledge-base/$kbId/index'
 import { Route as LayoutChatSessionIdIndexRouteImport } from './routes/_layout/chat/$sessionId/index'
 
 const LoginRoute = LoginRouteImport.update({
@@ -53,6 +54,12 @@ const LayoutAccountIndexRoute = LayoutAccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutKnowledgeBaseKbIdIndexRoute =
+  LayoutKnowledgeBaseKbIdIndexRouteImport.update({
+    id: '/knowledge-base/$kbId/',
+    path: '/knowledge-base/$kbId/',
+    getParentRoute: () => LayoutRoute,
+  } as any)
 const LayoutChatSessionIdIndexRoute =
   LayoutChatSessionIdIndexRouteImport.update({
     id: '/chat/$sessionId/',
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof LayoutChatIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
   '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
+  '/knowledge-base/$kbId': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -77,6 +85,7 @@ export interface FileRoutesByTo {
   '/chat': typeof LayoutChatIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
   '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
+  '/knowledge-base/$kbId': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -88,6 +97,7 @@ export interface FileRoutesById {
   '/_layout/chat/': typeof LayoutChatIndexRoute
   '/_layout/knowledge-base/': typeof LayoutKnowledgeBaseIndexRoute
   '/_layout/chat/$sessionId/': typeof LayoutChatSessionIdIndexRoute
+  '/_layout/knowledge-base/$kbId/': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/knowledge-base'
     | '/chat/$sessionId'
+    | '/knowledge-base/$kbId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/knowledge-base'
     | '/chat/$sessionId'
+    | '/knowledge-base/$kbId'
   id:
     | '__root__'
     | '/'
@@ -118,6 +130,7 @@ export interface FileRouteTypes {
     | '/_layout/chat/'
     | '/_layout/knowledge-base/'
     | '/_layout/chat/$sessionId/'
+    | '/_layout/knowledge-base/$kbId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -178,6 +191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAccountIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/knowledge-base/$kbId/': {
+      id: '/_layout/knowledge-base/$kbId/'
+      path: '/knowledge-base/$kbId'
+      fullPath: '/knowledge-base/$kbId'
+      preLoaderRoute: typeof LayoutKnowledgeBaseKbIdIndexRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/chat/$sessionId/': {
       id: '/_layout/chat/$sessionId/'
       path: '/chat/$sessionId'
@@ -193,6 +213,7 @@ interface LayoutRouteChildren {
   LayoutChatIndexRoute: typeof LayoutChatIndexRoute
   LayoutKnowledgeBaseIndexRoute: typeof LayoutKnowledgeBaseIndexRoute
   LayoutChatSessionIdIndexRoute: typeof LayoutChatSessionIdIndexRoute
+  LayoutKnowledgeBaseKbIdIndexRoute: typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
@@ -200,6 +221,7 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutChatIndexRoute: LayoutChatIndexRoute,
   LayoutKnowledgeBaseIndexRoute: LayoutKnowledgeBaseIndexRoute,
   LayoutChatSessionIdIndexRoute: LayoutChatSessionIdIndexRoute,
+  LayoutKnowledgeBaseKbIdIndexRoute: LayoutKnowledgeBaseKbIdIndexRoute,
 }
 
 const LayoutRouteWithChildren =

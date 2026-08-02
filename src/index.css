@@ -475,3 +475,22 @@ samp {
     }
   }
 }
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-text {
+  animation: fade-in 0.15s ease-out;
+}
+
+.markdown-streaming {
+  animation: fade-in 0.15s ease-out;
+}

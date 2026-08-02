@@ -1,11 +1,15 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { supabase } from "@/lib/database";
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_layout")({
-  beforeLoad: ({ context }) => {
-    const auth = context.auth;
-    if (!auth.isAuthenticated) {
+  beforeLoad: async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
       throw redirect({ to: "/login" });
     }
   },

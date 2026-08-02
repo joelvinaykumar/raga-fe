@@ -26,7 +26,7 @@ export const MessageBubble: React.FC<{
             : "place-self-start",
         )}
       >
-        {msg.loading ? (
+        {msg.loading && !msg.content ? (
           <div className="loading-dots">
             <div className="dot"></div>
             <div className="dot"></div>
@@ -34,7 +34,12 @@ export const MessageBubble: React.FC<{
           </div>
         ) : (
           <>
-            <MarkdownRenderer>{msg.content}</MarkdownRenderer>
+            <div
+              key={msg.loading ? `s-${msg.content.length}` : "static"}
+              className={cn(msg.loading && "markdown-streaming")}
+            >
+              <MarkdownRenderer>{msg.content}</MarkdownRenderer>
+            </div>
 
             <p className="text-muted-foreground text-xxs">
               {new Intl.DateTimeFormat("en-US", {

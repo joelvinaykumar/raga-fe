@@ -35,7 +35,7 @@ function RouteComponent() {
           <div className="relative mx-auto">
             <Avatar className="w-24 h-24 ring-4 ring-primary/20 ring-offset-4 ring-offset-background pulse-glow">
               <AvatarImage src={profile?.picture} alt={profile?.full_name} />
-              <AvatarFallback className="text-xl font-bold bg-gradient-primary text-primary-foreground">
+              <AvatarFallback className="text-xl font-bold bg-gradient-primary text-foreground">
                 {getInitials(profile?.full_name ?? current_user?.email)}
               </AvatarFallback>
             </Avatar>
@@ -50,7 +50,7 @@ function RouteComponent() {
 
         <CardContent className="space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <Mail className="w-4 h-4 text-primary" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Email</p>
@@ -68,7 +68,7 @@ function RouteComponent() {
               )}
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <Phone className="w-4 h-4 text-primary" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Phone</p>
@@ -84,7 +84,7 @@ function RouteComponent() {
               )}
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors">
               <Calendar className="w-4 h-4 text-primary" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">Last Login</p>

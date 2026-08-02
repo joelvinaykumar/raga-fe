@@ -1,14 +1,18 @@
-import { createFileRoute, useLocation } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { MessageBubble } from "../-components/message-bubble";
-import { ChatInput } from "../-components/chat-input";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AxiosResponse } from "axios";
+import { KnowledgeBaseDropdown } from "@/components/knowledge-base-dropdown";
 import axios from "@/lib/axios";
-import { FileAttachment } from "..";
-import { ChatSkeletonLoader } from "../-components/chat-skeleton-loader";
-import { Model } from "@/lib/types";
+import { useStream } from "@/lib/stream";
+import { Model, SessionResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
+import { AxiosResponse } from "axios";
+import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
+import { FileAttachment } from "..";
+import { ChatInput } from "../-components/chat-input";
+import { ChatSkeletonLoader } from "../-components/chat-skeleton-loader";
+import { MessageBubble } from "../-components/message-bubble";
 
 export const Route = createFileRoute("/_layout/chat/$sessionId/")({
   component: RouteComponent,
@@ -42,6 +46,14 @@ function RouteComponent() {
     retry: false,
   });
 
+  const { data: sessions = [] } = useQuery<any, any, SessionResponse[]>({
+    queryKey: ["list-sessions"],
+    queryFn: () => axios.get("list-sessions"),
+    select: (res: AxiosResponse) => res.data,
+  });
+
+  const currentSession = sessions.find((s) => s.session_id === sessionId);
+
   const { refetch: fetchChatHistory, isFetching: isFetchingChatHistory } =
     useQuery({
       queryKey: ["chat-history"],
@@ -50,15 +62,9 @@ function RouteComponent() {
       enabled: false,
     });
 
-  const { mutateAsync: askQuestion, isPending: loadingAnswer } = useMutation({
-    mutationKey: ["chat"],
-    mutationFn: (query: string) =>
-      axios.post("/chat", {
-        question: query,
-        session_id: sessionId,
-        model: "gpt-4o-mini",
-      }),
-  });
+  const { stream: streamChat } = useStream();
+
+  const [isStreaming, setIsStreaming] = useState(false);
 
   const refetchDocs = async () => {
     try {
@@ -69,45 +75,102 @@ function RouteComponent() {
     }
   };
 
-  const scrollToBottom = () =>
+  const scrollToBottom = (behavior: ScrollBehavior = "smooth") =>
     scrollRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior,
     });
 
   const onSubmit = async (message?: string) => {
     const content = message ?? query;
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "user",
-          content,
-          timestamp: new Date(),
-          loading: false,
-        },
-        {
-          role: "assistant",
-          content: "",
-          timestamp: new Date(),
-          loading: true,
-        },
-      ]);
-    }, 100);
-    setTimeout(scrollToBottom, 100);
-    const res = await askQuestion(content);
-    setTimeout(scrollToBottom, 100);
     setQuery("");
-    window.history.replaceState({}, "", window.location.pathname);
     setMessages((prev) => [
-      ...prev.slice(0, prev.length - 1),
+      ...prev,
       {
-        role: "assistant",
-        content: res.data.answer,
+        role: "user",
+        content,
         timestamp: new Date(),
         loading: false,
       },
+      {
+        role: "assistant",
+        content: "",
+        timestamp: new Date(),
+        loading: true,
+      },
     ]);
     setTimeout(scrollToBottom, 100);
+
+    try {
+      setIsStreaming(true);
+      await streamChat(
+        "/chat",
+        {
+          question: content,
+          session_id: sessionId,
+          model: "gpt-4o-mini",
+        },
+        (chunk: string) => {
+          flushSync(() => {
+            setMessages((prev) => {
+              const last = prev[prev.length - 1];
+              if (last?.role === "assistant") {
+                return [
+                  ...prev.slice(0, -1),
+                  { ...last, content: last.content + chunk },
+                ];
+              }
+              return prev;
+            });
+          });
+          scrollToBottom("auto");
+        },
+      );
+      setIsStreaming(false);
+      window.history.replaceState({}, "", window.location.pathname);
+      setMessages((prev) =>
+        prev.map((msg, i) =>
+          i === prev.length - 1 && msg.role === "assistant"
+            ? { ...msg, loading: false }
+            : msg,
+        ),
+      );
+    } catch (error: any) {
+      console.error("Error asking question => ", error);
+
+      // Attempt to refetch chat history in case backend saved answer before returning 500
+      try {
+        const historyRes = await fetchChatHistory();
+        if (
+          historyRes?.data &&
+          Array.isArray(historyRes.data) &&
+          historyRes.data.length > 0
+        ) {
+          const lastMsg = historyRes.data[historyRes.data.length - 1];
+          if (lastMsg?.role === "assistant" && lastMsg?.content) {
+            setMessages(historyRes.data);
+            return;
+          }
+        }
+      } catch (historyErr) {
+        console.error("Error refetching chat history => ", historyErr);
+      }
+
+      const errorMessage =
+        error?.data?.detail ||
+        error?.data?.message ||
+        "The LLM service is currently down or unavailable. Please try again later.";
+      setMessages((prev) => [
+        ...prev.slice(0, prev.length - 1),
+        {
+          role: "assistant",
+          content: `⚠️ ${errorMessage}`,
+          timestamp: new Date(),
+          loading: false,
+        },
+      ]);
+    } finally {
+      setTimeout(scrollToBottom, 100);
+    }
   };
 
   useEffect(() => {
@@ -125,7 +188,9 @@ function RouteComponent() {
       .then(() => {
         if (stateQuery && stateQuery?.length > 0) {
           onSubmit(stateQuery).then(() =>
-            queryClient.invalidateQueries({ queryKey: ["list-sessions"] }),
+            queryClient.invalidateQueries({
+              queryKey: ["list-sessions"],
+            }),
           );
         }
       });
@@ -138,6 +203,12 @@ function RouteComponent() {
   return (
     <div className="w-full h-full flex justify-center">
       <div className="w-2/3">
+        <div className="flex justify-end pt-4 px-2">
+          <KnowledgeBaseDropdown
+            sessionId={sessionId}
+            currentKnowledgeBaseId={currentSession?.knowledgebase_id}
+          />
+        </div>
         <div
           className={cn(
             "pt-16 overflow-y-scroll no-scrollbar flex flex-col gap-2",
@@ -152,6 +223,11 @@ function RouteComponent() {
             messages.map((msg) => <MessageBubble msg={msg} />)
           )}
           <div ref={scrollRef} />
+          {isStreaming && (
+            <div className="flex justify-center py-2">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
         <ChatInput
           session_id={sessionId}
@@ -159,7 +235,7 @@ function RouteComponent() {
           setQuery={setQuery}
           model={model}
           setModel={setModel}
-          loading={loadingAnswer}
+          loading={isStreaming}
           onSubmit={onSubmit}
           attachments={attachments}
           setAttachments={setAttachments}

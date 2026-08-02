@@ -166,7 +166,7 @@ export const ChatInput: React.FC<IChatInput> = ({
         />
         <div className="flex items-center justify-between mt-2">
           <div className="flex gap-2">
-            {session_id && (
+            {/* {session_id && (
               <Tooltip>
                 <TooltipTrigger>
                   <Button
@@ -178,13 +178,13 @@ export const ChatInput: React.FC<IChatInput> = ({
                     className="text-muted-foreground"
                   >
                     <Paperclip className="mr-1 size-4" />
-                    {/* {isUploadingFiles ? "Uploading ..." : "Upload"} */}
+                    {isUploadingFiles ? "Uploading ..." : "Upload"}
                     Upload
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Supports .pdf, .docx format(s)</TooltipContent>
               </Tooltip>
-            )}
+            )} */}
 
             {setModel && (
               <Select
