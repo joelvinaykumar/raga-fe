@@ -187,7 +187,7 @@ function RouteComponent() {
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+    <div className="flex flex-col items-center min-h-screen w-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
       {/* Header */}
       <div className="flex items-center justify-between w-full mb-6">
         <h1 className="text-3xl font-extrabold">Knowledge Bases</h1>
@@ -310,7 +310,7 @@ function RouteComponent() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full">
           {knowledgeBases.map((kb) => (
             <div key={kb.rag_id} className="relative">
               <Link
