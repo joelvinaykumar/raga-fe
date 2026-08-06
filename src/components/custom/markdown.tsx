@@ -7,6 +7,11 @@ import rehypeRaw from "rehype-raw";
 import rehypeSlug from "rehype-slug";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 // import "katex/dist/katex.min.css";
 import type { PluggableList } from "unified";
 import { Download, ExternalLink, Copy, Check } from "lucide-react";
@@ -76,7 +81,7 @@ const CodeBlockContent: React.FC<{
           fontSize: "0.875rem",
           lineHeight: "1.5",
           fontFamily:
-            "'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
         }}
         lineNumberStyle={{
           minWidth: "2.5em",
@@ -86,7 +91,7 @@ const CodeBlockContent: React.FC<{
           borderRight: "1px solid",
           borderColor: theme === "dark" ? "#374151" : "#e5e7eb",
           fontFamily:
-            "'Space Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+            "'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
         }}
       >
         {code}
@@ -324,6 +329,45 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
           className="border-l-4 border-muted-foreground pl-4 italic text-primary/60"
         />
       ),
+      sup: (props: any) => {
+        const className = String(props.className ?? "");
+        const isCitation = className.includes("citation-ref");
+
+        if (!isCitation) {
+          return <sup {...props} />;
+        }
+
+        const preview =
+          typeof props["data-preview"] === "string" &&
+          props["data-preview"].trim().length > 0
+            ? props["data-preview"]
+            : "No source preview available.";
+        const citationIndex =
+          typeof props["data-citation-index"] === "string"
+            ? props["data-citation-index"]
+            : "source";
+
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <sup className="mx-0.5 cursor-help rounded-sm bg-primary/10 px-1 py-0.5 align-super font-mono text-[10px] font-semibold text-primary hover:bg-primary/20">
+                {props.children}
+              </sup>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="w-72 border-border bg-popover text-popover-foreground"
+            >
+              <div className="space-y-1.5 text-xs">
+                <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  Citation {citationIndex}
+                </p>
+                <p className="text-muted-foreground line-clamp-4">{preview}</p>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        );
+      },
     }),
     [codeTheme, showLineNumbers, linkTarget, onLinkClick, onDownloadClick],
   );

@@ -1,6 +1,10 @@
 import { KnowledgeBaseDropdown } from "@/components/knowledge-base-dropdown";
 import axios from "@/lib/axios";
-import { useStream } from "@/lib/stream";
+import {
+  useStream,
+  type CitationMeta,
+  type SourceChunkMeta,
+} from "@/lib/stream";
 import { Model, SessionResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +40,8 @@ function RouteComponent() {
       content: string;
       timestamp: Date;
       loading: boolean;
+      citations?: CitationMeta[];
+      chunks?: SourceChunkMeta[];
     }>
   >([]);
 
@@ -98,6 +104,8 @@ function RouteComponent() {
         content: "",
         timestamp: new Date(),
         loading: true,
+        citations: [],
+        chunks: [],
       },
     ]);
     setTimeout(scrollToBottom, 100);
@@ -126,6 +134,20 @@ function RouteComponent() {
           });
           scrollToBottom("auto");
         },
+        (meta) => {
+          setMessages((prev) => {
+            const last = prev[prev.length - 1];
+            if (!last || last.role !== "assistant") return prev;
+            return [
+              ...prev.slice(0, -1),
+              {
+                ...last,
+                citations: meta.citations ?? last.citations ?? [],
+                chunks: meta.chunks ?? last.chunks ?? [],
+              },
+            ];
+          });
+        },
       );
       setIsStreaming(false);
       window.history.replaceState({}, "", window.location.pathname);
@@ -149,7 +171,16 @@ function RouteComponent() {
         ) {
           const lastMsg = historyRes.data[historyRes.data.length - 1];
           if (lastMsg?.role === "assistant" && lastMsg?.content) {
-            setMessages(historyRes.data);
+            setMessages(
+              historyRes.data.map((msg: any) => ({
+                role: msg.role || "user",
+                content: msg.content || "",
+                timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+                loading: false,
+                citations: Array.isArray(msg.citations) ? msg.citations : [],
+                chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
+              })),
+            );
             return;
           }
         }
@@ -168,6 +199,8 @@ function RouteComponent() {
           content: `⚠️ ${errorMessage}`,
           timestamp: new Date(),
           loading: false,
+          citations: [],
+          chunks: [],
         },
       ]);
     } finally {
@@ -182,7 +215,18 @@ function RouteComponent() {
     Promise.all([refetchDocs(), fetchChatHistory().catch(() => null)])
       .then(([_, chatHistoryRes]) => {
         if (cancelled) return;
-        if (chatHistoryRes?.data) setMessages(chatHistoryRes.data);
+        if (chatHistoryRes?.data) {
+          setMessages(
+            chatHistoryRes.data.map((msg: any) => ({
+              role: msg.role || "user",
+              content: msg.content || "",
+              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+              loading: false,
+              citations: Array.isArray(msg.citations) ? msg.citations : [],
+              chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
+            })),
+          );
+        }
         setTimeout(
           () =>
             scrollRef.current?.scrollIntoView({
@@ -230,7 +274,7 @@ function RouteComponent() {
             <ChatSkeletonLoader />
           ) : (
             messages.map((msg, index) => (
-              <MessageBubble key={index} msg={msg} />
+              <MessageBubble key={index} msg={msg} bubbleIndex={index} />
             ))
           )}
           <div ref={scrollRef} />

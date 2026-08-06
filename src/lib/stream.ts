@@ -3,8 +3,41 @@ import { BASE_URL } from "./constants";
 import { supabase } from "@/lib/database";
 
 type StreamChunk = {
+  content?: string;
+  done?: boolean;
+  citations?: CitationMeta[];
+  chunks?: SourceChunkMeta[];
+};
+
+export type CitationMeta = {
+  index: number;
+  start_char: number;
+  end_char: number;
+  display_char: number;
+  chunk_id?: string | null;
+  file_id?: number | string | null;
+  filename?: string | null;
+  quote?: string | null;
+  score?: number | string | null;
+  url?: string | null;
+};
+
+export type SourceChunkMeta = {
+  index?: number;
+  chunk_id?: string | null;
+  chunk_index?: number | null;
+  file_id?: number | string | null;
+  filename?: string | null;
+  score?: number | string | null;
+  source?: string | null;
+  url?: string | null;
   content: string;
-  done: boolean;
+  preview?: string | null;
+};
+
+type StreamMeta = {
+  citations?: CitationMeta[];
+  chunks?: SourceChunkMeta[];
 };
 
 type UseStreamReturn = {
@@ -15,6 +48,7 @@ type UseStreamReturn = {
     url: string,
     body: Record<string, unknown>,
     onChunk?: (chunk: string) => void,
+    onMeta?: (meta: StreamMeta) => void,
   ) => Promise<void>;
   reset: () => void;
 };
@@ -36,6 +70,7 @@ export function useStream(): UseStreamReturn {
       url: string,
       body: Record<string, unknown>,
       onChunk?: (chunk: string) => void,
+      onMeta?: (meta: StreamMeta) => void,
     ) => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -95,6 +130,12 @@ export function useStream(): UseStreamReturn {
                 const jsonStr = trimmed.slice(6);
                 try {
                   const parsed: StreamChunk = JSON.parse(jsonStr);
+                  if (parsed.citations || parsed.chunks) {
+                    onMeta?.({
+                      citations: parsed.citations,
+                      chunks: parsed.chunks,
+                    });
+                  }
                   if (parsed.done) {
                     setIsLoading(false);
                     return;
@@ -117,6 +158,12 @@ export function useStream(): UseStreamReturn {
           const answer = json.answer ?? "";
           setData(answer);
           onChunk?.(answer);
+          if (json.citations || json.chunks) {
+            onMeta?.({
+              citations: json.citations,
+              chunks: json.chunks,
+            });
+          }
           setIsLoading(false);
         }
       } catch (err) {

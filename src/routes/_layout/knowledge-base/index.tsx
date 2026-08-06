@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Card,
   CardHeader,
@@ -19,6 +20,7 @@ type KnowledgeBase = {
   rag_id: string;
   name: string;
   description?: string;
+  document_count?: number;
 };
 
 type FileProgress = {
@@ -38,6 +40,24 @@ function RouteComponent() {
   const fetchFileProgress = async (kbs: KnowledgeBase[]) => {
     if (!kbs.length) {
       setFileProgressByKb({});
+      return;
+    }
+
+    // Check if the backend already provided document counts inline
+    const hasInlinedCounts = kbs.every(
+      (kb) => typeof kb.document_count === "number",
+    );
+
+    if (hasInlinedCounts) {
+      const inlineResults = kbs.map((kb) => {
+        const count = kb.document_count ?? 0;
+        const progress = Math.min(
+          100,
+          Math.round((count / FILE_COUNT_TARGET) * 100),
+        );
+        return [kb.rag_id, { count, progress }] as const;
+      });
+      setFileProgressByKb(Object.fromEntries(inlineResults));
       return;
     }
 
@@ -120,8 +140,19 @@ function RouteComponent() {
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
-          {knowledgeBases.map((kb) => (
-            <div key={kb.rag_id} className="relative group">
+          {knowledgeBases.map((kb, index) => (
+            <motion.div
+              key={kb.rag_id}
+              className="relative group"
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{
+                duration: 0.28,
+                delay: index * 0.05,
+                ease: "easeOut",
+              }}
+              whileHover={{ y: -4 }}
+            >
               <Link
                 to="/knowledge-base/$kbId"
                 params={{ kbId: kb.rag_id }}
@@ -170,7 +201,7 @@ function RouteComponent() {
                   </CardFooter>
                 </Card>
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

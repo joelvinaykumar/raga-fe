@@ -48,7 +48,29 @@ if (!rootElement.innerHTML) {
       <ThemeProvider>
         <QueryClientProvider client={queryClient}>
           <App />
-          <Toaster closeButton position="top-right" />
+          <Toaster
+            closeButton
+            position="top-right"
+            theme="system"
+            toastOptions={{
+              className:
+                "font-serif border border-[#ccc3d4]/40 dark:border-[#2d2a2e]/60 text-[#1e1b19] dark:text-[#f4ece8] shadow-lg rounded-xl pointer-events-auto",
+              descriptionClassName:
+                "font-sans text-xs text-[#7b7483] dark:text-[#9c95a6]",
+              style: {
+                background: "hsl(var(--popover))",
+                backgroundColor: "hsl(var(--popover))",
+                color: "hsl(var(--popover-foreground))",
+                opacity: 1,
+              },
+              actionButtonStyle: {
+                backgroundColor: "#340075",
+                color: "#ffffff",
+                fontFamily: "var(--font-sans)",
+                borderRadius: "8px",
+              },
+            }}
+          />
         </QueryClientProvider>
       </ThemeProvider>
     </StrictMode>,

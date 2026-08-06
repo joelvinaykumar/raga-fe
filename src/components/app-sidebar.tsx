@@ -147,12 +147,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                                 </span>
                               )}
                             </div>
-                            {/* Green/Orange soft status lights mimicking reference design */}
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-                              <span
-                                className={`h-2 w-2 rounded-full ${index % 2 === 0 ? "bg-emerald-500" : "bg-amber-500"}`}
-                              />
-                            </div>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

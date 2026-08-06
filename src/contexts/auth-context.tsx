@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect } from "react";
 import { User } from "@supabase/supabase-js";
 
+import axios from "@/lib/axios";
 import { supabase } from "@/lib/database";
 import { useHomeStore } from "@/store";
 
@@ -18,9 +19,8 @@ const AuthContext = createContext<AuthContext | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useHomeStore((state) => state.is_authenticated);
-  const { current_user, setCurrentUser, setIsAuthenticated } = useHomeStore(
-    (state) => state,
-  );
+  const { current_user, setCurrentUser, setIsAuthenticated, setApiKey } =
+    useHomeStore((state) => state);
 
   const login = async (input: { email: string; password: string }) => {
     try {
@@ -91,12 +91,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setCurrentUser(null);
     setIsAuthenticated(false);
+    setApiKey(null);
   };
 
   useEffect(() => {
+    // Ensure the user's MCP API key is provisioned whenever a session exists.
+    // The backend /me endpoint creates one on first call and reuses it after.
+    const ensureApiKey = async (hasSession: boolean) => {
+      if (!hasSession) {
+        setApiKey(null);
+        return;
+      }
+      try {
+        const res = await axios.get("/me");
+        setApiKey(res.data?.api_key ?? null);
+      } catch (error) {
+        console.error("Error provisioning API key => ", error);
+      }
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsAuthenticated(!!session);
       setCurrentUser(session?.user ?? null);
+      ensureApiKey(!!session);
     });
 
     const {
@@ -104,10 +121,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
       setCurrentUser(session?.user ?? null);
+      ensureApiKey(!!session);
     });
 
     return () => subscription.unsubscribe();
-  }, [setCurrentUser, setIsAuthenticated]);
+  }, [setCurrentUser, setIsAuthenticated, setApiKey]);
 
   return (
     <AuthContext.Provider
