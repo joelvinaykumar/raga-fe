@@ -16,6 +16,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as LayoutKnowledgeBaseIndexRouteImport } from './routes/_layout/knowledge-base/index'
 import { Route as LayoutChatIndexRouteImport } from './routes/_layout/chat/index'
 import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account/index'
+import { Route as LayoutKnowledgeBaseNewRouteImport } from './routes/_layout/knowledge-base/new'
 import { Route as LayoutKnowledgeBaseKbIdIndexRouteImport } from './routes/_layout/knowledge-base/$kbId/index'
 import { Route as LayoutChatSessionIdIndexRouteImport } from './routes/_layout/chat/$sessionId/index'
 
@@ -54,6 +55,11 @@ const LayoutAccountIndexRoute = LayoutAccountIndexRouteImport.update({
   path: '/account/',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutKnowledgeBaseNewRoute = LayoutKnowledgeBaseNewRouteImport.update({
+  id: '/knowledge-base/new',
+  path: '/knowledge-base/new',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutKnowledgeBaseKbIdIndexRoute =
   LayoutKnowledgeBaseKbIdIndexRouteImport.update({
     id: '/knowledge-base/$kbId/',
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
   '/chat': typeof LayoutChatIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
   '/chat': typeof LayoutChatIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/_layout/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/_layout/account/': typeof LayoutAccountIndexRoute
   '/_layout/chat/': typeof LayoutChatIndexRoute
   '/_layout/knowledge-base/': typeof LayoutKnowledgeBaseIndexRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/auth/callback'
+    | '/knowledge-base/new'
     | '/account'
     | '/chat'
     | '/knowledge-base'
@@ -115,6 +125,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/auth/callback'
+    | '/knowledge-base/new'
     | '/account'
     | '/chat'
     | '/knowledge-base'
@@ -126,6 +137,7 @@ export interface FileRouteTypes {
     | '/_layout'
     | '/login'
     | '/auth/callback'
+    | '/_layout/knowledge-base/new'
     | '/_layout/account/'
     | '/_layout/chat/'
     | '/_layout/knowledge-base/'
@@ -191,6 +203,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAccountIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/knowledge-base/new': {
+      id: '/_layout/knowledge-base/new'
+      path: '/knowledge-base/new'
+      fullPath: '/knowledge-base/new'
+      preLoaderRoute: typeof LayoutKnowledgeBaseNewRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/knowledge-base/$kbId/': {
       id: '/_layout/knowledge-base/$kbId/'
       path: '/knowledge-base/$kbId'
@@ -209,6 +228,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface LayoutRouteChildren {
+  LayoutKnowledgeBaseNewRoute: typeof LayoutKnowledgeBaseNewRoute
   LayoutAccountIndexRoute: typeof LayoutAccountIndexRoute
   LayoutChatIndexRoute: typeof LayoutChatIndexRoute
   LayoutKnowledgeBaseIndexRoute: typeof LayoutKnowledgeBaseIndexRoute
@@ -217,6 +237,7 @@ interface LayoutRouteChildren {
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
+  LayoutKnowledgeBaseNewRoute: LayoutKnowledgeBaseNewRoute,
   LayoutAccountIndexRoute: LayoutAccountIndexRoute,
   LayoutChatIndexRoute: LayoutChatIndexRoute,
   LayoutKnowledgeBaseIndexRoute: LayoutKnowledgeBaseIndexRoute,

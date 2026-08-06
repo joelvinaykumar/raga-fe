@@ -7,8 +7,7 @@ import "./index.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { ThemeProvider } from "./contexts/theme-context";
-import { useAuth } from "./hooks/use-auth";
-import { AuthProvider } from "./contexts/auth-context";
+import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // Create a new router instance
 const router = createRouter({ routeTree, context: { auth: undefined! } });

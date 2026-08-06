@@ -175,6 +175,7 @@ function RouteComponent() {
     }
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger initialization logic on mount / state query updates
   useEffect(() => {
     let cancelled = false;
 
@@ -212,9 +213,9 @@ function RouteComponent() {
   }, [fetchDocs, fetchChatHistory, sessionId, stateQuery]);
 
   return (
-    <div className="w-full h-full flex justify-center">
-      <div className="w-2/3">
-        <div className="flex justify-end pt-4 px-2">
+    <div className="w-full h-full flex justify-center bg-[#fff8f5] dark:bg-[#121115] border-l border-[#ccc3d4]/20 dark:border-[#2d2a2e]/20">
+      <div className="w-2/3 relative h-full flex flex-col justify-between pb-24">
+        <div className="flex justify-end pt-4 px-2 shrink-0">
           <KnowledgeBaseDropdown
             sessionId={sessionId}
             currentKnowledgeBaseId={currentSession?.knowledgebase_id}
@@ -222,21 +223,20 @@ function RouteComponent() {
         </div>
         <div
           className={cn(
-            "pt-16 overflow-y-scroll no-scrollbar flex flex-col gap-2",
-            attachments?.length > 0
-              ? "h-[calc(100%-10rem)] py-4"
-              : "h-[calc(100%-8rem)]",
+            "pt-6 overflow-y-scroll no-scrollbar flex flex-col gap-4 flex-1",
           )}
         >
           {isFetchingChatHistory ? (
             <ChatSkeletonLoader />
           ) : (
-            messages.map((msg) => <MessageBubble msg={msg} />)
+            messages.map((msg, index) => (
+              <MessageBubble key={index} msg={msg} />
+            ))
           )}
           <div ref={scrollRef} />
           {isStreaming && (
-            <div className="flex justify-center py-2">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <div className="flex justify-center py-2 shrink-0">
+              <Loader2 className="h-4 w-4 animate-spin text-[#340075] dark:text-[#9c7beb]" />
             </div>
           )}
         </div>
@@ -251,7 +251,7 @@ function RouteComponent() {
           attachments={attachments}
           setAttachments={setAttachments}
           onUpload={refetchDocs}
-          className="absolute bottom-4 w-2/3"
+          className="absolute bottom-8 left-1/2 z-20 w-[min(960px,calc(100%-1rem))] -translate-x-1/2"
         />
       </div>
     </div>

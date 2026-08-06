@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction, useRef, useState } from "react";
-import { ArrowUp, Loader, Loader2, Paperclip, X } from "lucide-react";
+import { Loader, Loader2, Paperclip, Sparkles, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { useMutation } from "@tanstack/react-query";
 
@@ -102,7 +102,7 @@ export const ChatInput: React.FC<IChatInput> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className={cn(
-          "w-full rounded-lg border border-border bg-secondary p-2 shadow-sm active:shadow-md",
+          "w-full rounded-full border border-[#d8d2e0] bg-white px-4 py-2.5 backdrop-blur-xl shadow-[0_10px_28px_-18px_rgba(44,28,90,0.45),0_3px_8px_-4px_rgba(30,27,25,0.25)] dark:border-[#4a4452] dark:bg-[#1b1820]",
           "duration-1000 animate-in slide-in-from-bottom-2",
           className,
         )}
@@ -120,11 +120,11 @@ export const ChatInput: React.FC<IChatInput> = ({
           className="hidden"
         />
         {attachments.length > 0 && (
-          <div className="mb-1">
+          <div className="mb-2 flex flex-wrap gap-1.5">
             {attachments.map((file, index) => (
               <div
                 key={index}
-                className="flex w-fit items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-xs backdrop-blur-sm"
+                className="flex w-fit items-center gap-1 rounded-full border border-border bg-background/80 px-2.5 py-1 text-xs backdrop-blur-sm"
               >
                 <Paperclip className="h-3 w-3 flex-shrink-0" />
                 <div className="flex min-w-0 flex-col">
@@ -151,16 +151,16 @@ export const ChatInput: React.FC<IChatInput> = ({
             ))}
           </div>
         )}
-        <Textarea
-          rows={2}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder="Type your query here ..."
-          className="resize-none border-none shadow-none focus-visible:ring-0"
-        />
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex gap-2">
+        <div className="flex items-center gap-3">
+          <Textarea
+            rows={1}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyPress}
+            placeholder="Prompt here..."
+            className="min-h-8 flex-1 resize-none border-none bg-transparent px-1 py-1.5 text-[17px] shadow-none placeholder:text-[#6f6994]/85 focus-visible:ring-0 dark:placeholder:text-[#b7aecf]"
+          />
+          <div className="flex items-center gap-2">
             {/* {session_id && (
               <Tooltip>
                 <TooltipTrigger>
@@ -186,7 +186,7 @@ export const ChatInput: React.FC<IChatInput> = ({
                 value={model}
                 onValueChange={(value) => setModel(value as Model)}
               >
-                <SelectTrigger className="w-fit h-6 text-xs">
+                <SelectTrigger className="h-8 w-fit rounded-full border-[#d8d2e0] bg-transparent text-[11px] text-[#5d5685] dark:border-[#4a4452] dark:text-[#c1b8dd]">
                   <SelectValue placeholder="Select a model" />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,25 +195,25 @@ export const ChatInput: React.FC<IChatInput> = ({
                 </SelectContent>
               </Select>
             )}
+            <Button
+              type="button"
+              className="h-9 rounded-full bg-transparent px-3 text-[#5d5685] shadow-none hover:bg-[#f4f0ff] hover:text-[#3f3770] dark:text-[#d2c9ef] dark:hover:bg-[#292334]"
+              disabled={
+                query?.length === 0 ||
+                loading ||
+                isUploadingAttachment ||
+                isDeletingAttachment
+              }
+              onClick={() => onSubmit()}
+            >
+              {loading || isUploadingAttachment || isDeletingAttachment ? (
+                <Loader className="mr-1 size-4 animate-spin" />
+              ) : (
+                <Sparkles className="mr-1 size-4" />
+              )}
+              Generate
+            </Button>
           </div>
-          <Button
-            size="icon-sm"
-            type="button"
-            className="rounded-full"
-            disabled={
-              query?.length === 0 ||
-              loading ||
-              isUploadingAttachment ||
-              isDeletingAttachment
-            }
-            onClick={() => onSubmit()}
-          >
-            {loading || isUploadingAttachment || isDeletingAttachment ? (
-              <Loader className="size-4 animate-spin" />
-            ) : (
-              <ArrowUp className="size-4" />
-            )}
-          </Button>
         </div>
       </motion.div>
       <AlertDialog

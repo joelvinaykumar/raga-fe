@@ -7,8 +7,8 @@ RAGA — a Vite + React 18 + TypeScript RAG chat UI ("Rag As A Service"). Authen
 - Dev server: `bun dev`
 - Build (typecheck + bundle): `bun run build` — runs `tsc && vite build`; type errors block build
 - Lint: `bun run lint` (Biome). No test runner / test script exists.
-- Quick typecheck: `npx tsc --noEmit`
-- Package manager is **bun** (`bun.lock`). Gotcha: the husky pre-commit hook runs `pnpm lint-staged`, so commits need `pnpm` (it is installed here) — plain `git commit` will otherwise fail.
+- Quick typecheck: `bun x tsc --noEmit`
+- Package manager is **bun** (`bun.lock`). The husky pre-commit hook runs `bun x lint-staged` using bun.
 
 ## Architecture
 

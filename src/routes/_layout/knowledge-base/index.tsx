@@ -1,80 +1,18 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
-  CardContent,
   CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
 import axios from "@/lib/axios";
-import { supabase } from "@/lib/database";
 import { createFileRoute } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
-import { MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Plus } from "lucide-react";
 export const Route = createFileRoute("/_layout/knowledge-base/")({
   component: RouteComponent,
-});
-
-// Zod schema for Knowledge Base creation
-const knowledgeBaseSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  description: z.string().optional(),
-  top_k: z.number().min(0).default(0.5),
-  embedding_model: z
-    .enum(["text-embedding-ada-002"])
-    .default("text-embedding-ada-002"),
-});
-
-// Zod schema for editing Knowledge Base name/description
-const editKnowledgeBaseSchema = z.object({
-  name: z.string().min(1, { message: "Name is required" }),
-  description: z.string().optional(),
 });
 
 type KnowledgeBase = {
@@ -83,366 +21,159 @@ type KnowledgeBase = {
   description?: string;
 };
 
+type FileProgress = {
+  count: number;
+  progress: number;
+};
+
+const FILE_COUNT_TARGET = 10;
+
 function RouteComponent() {
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
-  const [showForm, setShowForm] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [fileProgressByKb, setFileProgressByKb] = useState<
+    Record<string, FileProgress>
+  >({});
   const [loadingData, setLoadingData] = useState(false);
-  const [editingKb, setEditingKb] = useState<KnowledgeBase | null>(null);
-  const [deletingKb, setDeletingKb] = useState<KnowledgeBase | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState(false);
 
-  const form = useForm({
-    resolver: zodResolver(knowledgeBaseSchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      top_k: 0.5,
-      embedding_model: "text-embedding-ada-002",
-    },
-  });
+  const fetchFileProgress = async (kbs: KnowledgeBase[]) => {
+    if (!kbs.length) {
+      setFileProgressByKb({});
+      return;
+    }
 
-  const editForm = useForm({
-    resolver: zodResolver(editKnowledgeBaseSchema),
-    defaultValues: { name: "", description: "" },
-  });
+    const results = await Promise.all(
+      kbs.map(async (kb) => {
+        try {
+          const res = await axios.get(`/rag/${kb.rag_id}/documents`);
+          const count = Array.isArray(res.data) ? res.data.length : 0;
+          const progress = Math.min(
+            100,
+            Math.round((count / FILE_COUNT_TARGET) * 100),
+          );
 
-  const openEditDialog = (kb: KnowledgeBase) => {
-    setEditingKb(kb);
-    editForm.reset({ name: kb.name, description: kb.description ?? "" });
+          return [kb.rag_id, { count, progress }] as const;
+        } catch {
+          return [kb.rag_id, { count: 0, progress: 0 }] as const;
+        }
+      }),
+    );
+
+    setFileProgressByKb(Object.fromEntries(results));
   };
 
   const fetchKnowledgeBases = async () => {
     setLoadingData(true);
     try {
-      // Retrieve Supabase session token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      const res = await axios.get("/rag/all/", {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      setKnowledgeBases(res.data);
+      const res = await axios.get("/rag/all/");
+      const kbData: KnowledgeBase[] = Array.isArray(res.data) ? res.data : [];
+      setKnowledgeBases(kbData);
+      await fetchFileProgress(kbData);
     } catch (_error) {
       // error handling is done globally in axios interceptor
     } finally {
       setLoadingData(false);
     }
   };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fetch list once when layout mounts
   useEffect(() => {
     fetchKnowledgeBases();
   }, []);
 
-  const onSubmit = async (data: z.infer<typeof knowledgeBaseSchema>) => {
-    setLoading(true);
-    try {
-      await axios.post("/rag", { ...data, top_k: Math.round(data.top_k) }); // cast top_k to integer
-      toast.success("Knowledge Base created successfully");
-      setShowForm(false);
-      form.reset();
-      fetchKnowledgeBases();
-    } catch (_error) {
-      // errors are handled by interceptor
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdate = async (
-    data: z.infer<typeof editKnowledgeBaseSchema>,
-  ) => {
-    if (!editingKb) return;
-    setSaving(true);
-    try {
-      await axios.patch(`/rag/${editingKb.rag_id}`, {
-        name: data.name,
-        description: data.description,
-      });
-      toast.success("Knowledge Base updated successfully");
-      setEditingKb(null);
-      fetchKnowledgeBases();
-    } catch (_error) {
-      // errors are handled by interceptor
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deletingKb) return;
-    setDeleting(true);
-    try {
-      await axios.delete(`/rag/${deletingKb.rag_id}`);
-      toast.success("Knowledge Base deleted");
-      setDeletingKb(null);
-      fetchKnowledgeBases();
-    } catch (_error) {
-      // errors are handled by interceptor
-    } finally {
-      setDeleting(false);
-    }
-  };
-
   return (
-    <div className="flex flex-col items-center min-h-screen w-full bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-6">
+    <div className="flex flex-col items-start min-h-screen w-full bg-[#fff8f5] dark:bg-[#121115] p-8 gap-8 border-l border-[#ccc3d4]/20 dark:border-[#2d2a2e]/20">
       {/* Header */}
-      <div className="flex items-center justify-between w-full mb-6">
-        <h1 className="text-3xl font-extrabold">Knowledge Bases</h1>
-        <Button variant="outline" onClick={() => setShowForm((prev) => !prev)}>
-          <Plus className="mr-2 h-4 w-4" />{" "}
-          {showForm ? "Cancel" : "Add Knowledge Base"}
-        </Button>
+      <div className="flex items-center justify-between w-full border-b border-[#ccc3d4]/30 dark:border-[#2d2a2e]/30 pb-6">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-serif font-bold text-[#1e1b19] dark:text-[#f4ece8] tracking-tight">
+            Knowledge Bases
+          </h1>
+          <p className="text-sm text-[#4a4452] dark:text-[#9c95a6] font-sans">
+            Manage your workspace datasets, indexing contexts, and model
+            parameters.
+          </p>
+        </div>
+        <Link
+          to="/knowledge-base/new"
+          className="inline-flex h-10 items-center justify-center rounded-lg border border-[#ccc3d4] bg-transparent px-4 text-sm font-medium text-[#1e1b19] transition-all hover:bg-[#340075] hover:text-white dark:border-[#4a4452] dark:text-[#f4ece8] dark:hover:bg-[#6c40d6]"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Add Knowledge Base
+        </Link>
       </div>
-
-      {/* Form */}
-      {showForm && (
-        <Card className="w-full max-w-2xl shadow-xl">
-          <CardHeader>
-            <CardTitle>Create Knowledge Base</CardTitle>
-            <CardDescription>
-              Enter the details for a new knowledge base.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Knowledge Base name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="top_k"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Top K</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0.5"
-                          step="0.1"
-                          {...field}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="embedding_model"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Embedding Model</FormLabel>
-                      <FormControl>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select model" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="text-embedding-ada-002">
-                              text-embedding-ada-002
-                            </SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Optional description" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={loading}>
-                  {loading ? "Creating..." : "Create"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Knowledge Base Grid */}
       {loadingData ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="h-40 bg-gray-800/30 rounded animate-pulse"
+              className="h-44 bg-[#ccc3d4]/20 dark:bg-[#2d2a2e]/20 border border-[#ccc3d4]/30 dark:border-[#2d2a2e]/30 rounded-xl animate-pulse"
             />
           ))}
         </div>
       ) : knowledgeBases.length === 0 ? (
-        <div className="grid place-items-center h-64">
-          <p className="text-muted-foreground">
-            No Knowledge Bases found. Click "Add Knowledge Base" to get started.
+        <div className="grid place-items-center h-64 w-full border border-dashed border-[#ccc3d4] dark:border-[#4a4452] rounded-xl bg-white/40 dark:bg-[#16141a]/40">
+          <p className="text-[#4a4452] dark:text-[#9c95a6] font-sans">
+            No active editorial knowledge bases discovered. Create one above to
+            begin.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 w-full">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 w-full">
           {knowledgeBases.map((kb) => (
-            <div key={kb.rag_id} className="relative">
+            <div key={kb.rag_id} className="relative group">
               <Link
                 to="/knowledge-base/$kbId"
                 params={{ kbId: kb.rag_id }}
                 className="block"
               >
-                <Card>
-                  <CardHeader>
-                    <CardTitle>{kb.name}</CardTitle>
-                    {kb.description && (
-                      <CardDescription className="line-clamp-3 h-20">
+                <Card className="border border-[#ccc3d4] dark:border-[#4a4452] hover:border-[#340075] dark:hover:border-[#6c40d6] transition-all bg-white dark:bg-[#16141a] rounded-xl shadow-none p-2 h-full flex flex-col justify-between">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-xl font-serif font-bold text-[#1e1b19] dark:text-[#f4ece8] line-clamp-1 group-hover:text-[#340075] dark:group-hover:text-[#9c7beb] transition-colors">
+                      {kb.name}
+                    </CardTitle>
+                    {kb.description ? (
+                      <CardDescription className="line-clamp-3 h-14 mt-2 text-gray-400 dark:text-[#9c95a6] text-sm leading-relaxed">
                         {kb.description}
                       </CardDescription>
+                    ) : (
+                      <p className="text-sm text-[#ccc3d4] dark:text-[#4a4452] italic mt-2 h-14">
+                        No description provided.
+                      </p>
                     )}
                   </CardHeader>
-                  <CardFooter className="flex justify-end">
-                    <Button variant="outline">View</Button>
+                  <CardFooter className="flex justify-between items-center border-t border-[#ccc3d4]/20 dark:border-[#2d2a2e]/20 pt-3 gap-4">
+                    <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                      <span className="text-xxs font-semibold uppercase tracking-wider text-[#7b7483] dark:text-[#9c95a6] [font-feature-settings:'tnum']">
+                        {Math.max(
+                          0,
+                          FILE_COUNT_TARGET -
+                            (fileProgressByKb[kb.rag_id]?.count ?? 0),
+                        )}{" "}
+                        more uploads allowed
+                      </span>
+                      <div className="h-1 w-20 rounded-full bg-[#ccc3d4]/30 dark:bg-[#2d2a2e] overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#340075] to-[#6c40d6] rounded-full transition-all duration-300"
+                          style={{
+                            width: `${fileProgressByKb[kb.rag_id]?.progress ?? 0}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="border-[#ccc3d4] dark:border-[#4a4452] text-[#1e1b19] dark:text-[#f4ece8] group-hover:bg-[#340075]/10 dark:group-hover:bg-[#6c40d6]/10 group-hover:border-[#340075]/20 dark:group-hover:border-[#6c40d6]/20 group-hover:text-[#340075] dark:group-hover:text-[#9c7beb] rounded-lg h-8 px-3 text-xs font-semibold bg-transparent shrink-0"
+                    >
+                      Configure →
+                    </Button>
                   </CardFooter>
                 </Card>
               </Link>
-              <div className="absolute right-3 top-3 z-10">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => openEditDialog(kb)}>
-                      <Pencil className="h-4 w-4" /> Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => setDeletingKb(kb)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
             </div>
           ))}
         </div>
       )}
-      {/* Edit Knowledge Base Dialog */}
-      <Dialog
-        open={!!editingKb}
-        onOpenChange={(open) => !open && setEditingKb(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Knowledge Base</DialogTitle>
-            <DialogDescription>
-              Update the name and description of the knowledge base.
-            </DialogDescription>
-          </DialogHeader>
-          <Form {...editForm}>
-            <form
-              onSubmit={editForm.handleSubmit(handleUpdate)}
-              className="space-y-6"
-            >
-              <FormField
-                control={editForm.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Knowledge Base name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="description"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Optional description" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setEditingKb(null)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving}>
-                  {saving ? "Saving..." : "Save"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Knowledge Base Alert Dialog */}
-      <AlertDialog
-        open={!!deletingKb}
-        onOpenChange={(open) => !open && setDeletingKb(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Knowledge Base</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{deletingKb?.name}"? This action
-              cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingKb(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

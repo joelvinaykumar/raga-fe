@@ -31,17 +31,26 @@ function RouteComponent() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col gap-8 justify-center items-center">
-      <h1 className="text-4xl font-serif">
-        Hey Elliot 👋 What’s on your mind today?
-      </h1>
+    <div className="w-full h-full flex flex-col gap-8 justify-center items-center bg-[#fff8f5] dark:bg-[#121115] p-8 border-l border-[#ccc3d4]/20 dark:border-[#2d2a2e]/20">
+      <div className="text-center space-y-3 max-w-2xl">
+        <div className="text-xs font-mono text-[#4a4452] dark:text-[#9c95a6] uppercase tracking-widest">
+          NexusRAG Editorial System
+        </div>
+        <h1 className="text-5xl font-serif font-bold text-[#1e1b19] dark:text-[#f4ece8] tracking-tight leading-tight">
+          Hey Elliot 👋 What’s on your mind today?
+        </h1>
+        <p className="text-sm text-[#4a4452] dark:text-[#9c95a6] font-sans">
+          Initiate a clean editorial context. Connect documents or prompt the
+          model to review content.
+        </p>
+      </div>
       <ChatInput
         query={query}
         setQuery={setQuery}
         model={model}
         setModel={setModel}
         onSubmit={onSubmit}
-        className="w-2/3"
+        className="w-[min(960px,80%)]"
       />
     </div>
   );

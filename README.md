@@ -83,7 +83,7 @@ bun run build    # typecheck (tsc) + production bundle
 bun run lint     # Biome lint (auto-fix with: bun run lint --write)
 ```
 
-> Note: the husky pre-commit hook runs `pnpm lint-staged`, so committing requires `pnpm`.
+> Note: the husky pre-commit hook runs `bun x lint-staged` during commits.
 
 ### Environment variables
 

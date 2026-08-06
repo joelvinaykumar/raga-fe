@@ -3,13 +3,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -53,61 +46,94 @@ export function LoginForm({
   };
 
   return (
-    <Card className={className} {...props}>
-      <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <Button variant="secondary" className="w-full" onClick={onGoogleLogin}>
-          <img src="/google.webp" className="size-4 mr-2" alt="Google Logo" />
-          Login with Google
+    <div
+      className={`rounded-lg border border-[#e7e5e4] bg-white p-6 shadow-[0_1px_3px_0_rgb(0_0_0_/_0.1),0_1px_2px_-1px_rgb(0_0_0_/_0.1)] md:p-8 text-[#1e1b19] ${className ?? ""}`}
+      {...props}
+    >
+      <div className="mb-6 border-t-2 border-[#340075] pt-4 text-center">
+        <h2 className="font-serif text-3xl font-bold leading-tight text-[#1e1b19]">
+          Welcome Back
+        </h2>
+        <p className="mt-1 text-base text-[#4a4452]">
+          Sign in to your workspace
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 w-full justify-center gap-2 border-[#ccc3d4] bg-[#fff8f5] text-base font-medium text-[#1e1b19] hover:-translate-y-0.5 hover:bg-white"
+          onClick={onGoogleLogin}
+        >
+          <img src="/google.webp" alt="Google logo" className="h-4 w-4" />
+          Continue with Google
         </Button>
-        <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-          <span className="bg-background text-muted-foreground relative z-10 px-2">
-            Or continue with
-          </span>
-        </div>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <Form {...form}>
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Enter email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button className="w-full" loading={form.formState.isSubmitting}>
-              Login
-            </Button>
-          </Form>
-        </form>
-      </CardContent>
-    </Card>
+      </div>
+
+      <div className="relative my-6 text-center">
+        <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-border" />
+        <span className="relative bg-white px-3 font-mono text-xs uppercase tracking-[0.2em] text-[#4a4452]">
+          Or
+        </span>
+      </div>
+
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <Form {...form}>
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-mono text-xs uppercase tracking-[0.2em] text-[#1e1b19]">
+                  Email Address
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="engineer@company.com"
+                    className="h-11 rounded-lg border-[#ccc3d4] bg-white font-mono text-sm text-[#1e1b19] placeholder:font-mono placeholder:text-[#9a91a3] focus-visible:ring-[#340075]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-mono text-xs uppercase tracking-[0.2em] text-[#1e1b19]">
+                  Password
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="Enter your password"
+                    className="h-11 rounded-lg border-[#ccc3d4] bg-white font-mono text-sm text-[#1e1b19] placeholder:font-mono placeholder:text-[#9a91a3] focus-visible:ring-[#340075]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            className="h-11 w-full rounded-lg bg-[#340075] text-white text-base font-semibold hover:-translate-y-0.5 hover:bg-[#340075]/95"
+            loading={form.formState.isSubmitting}
+          >
+            Continue with Email
+          </Button>
+        </Form>
+      </form>
+
+      <p className="mt-5 text-center text-sm text-[#4a4452]">
+        Don&apos;t have an account?{" "}
+        <span className="font-semibold text-[#340075] hover:underline cursor-pointer">
+          Request Access
+        </span>
+      </p>
+    </div>
   );
 }

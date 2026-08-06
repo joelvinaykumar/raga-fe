@@ -79,8 +79,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "pnpm lint --write",
-      "git add"
+      "bun run lint --write"
     ]
   }
 }

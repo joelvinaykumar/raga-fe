@@ -9,6 +9,7 @@ export interface AuthContext {
   login: (input: { email: string; password: string }) => Promise<void>;
   signup: (input: { email: string; password: string }) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginWithGithub: () => Promise<void>;
   logout: () => Promise<void>;
   current_user: User | null;
 }
@@ -73,6 +74,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGithub = async () => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+    } catch (error) {
+      console.error("Error signing in with github => ", error);
+    }
+  };
+
   const logout = async () => {
     await supabase.auth.signOut();
     setCurrentUser(null);
@@ -80,19 +94,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUser(user);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+      setCurrentUser(session?.user ?? null);
     });
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(!!session);
-      if (session?.user) setCurrentUser(session?.user);
+      setCurrentUser(session?.user ?? null);
     });
-    return () => subscription.unsubscribe();
-  }, []);
 
-  console.log({ current_user });
+    return () => subscription.unsubscribe();
+  }, [setCurrentUser, setIsAuthenticated]);
 
   return (
     <AuthContext.Provider
@@ -101,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         current_user,
         signup,
         loginWithGoogle,
+        loginWithGithub,
         login,
         logout,
       }}

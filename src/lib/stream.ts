@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import { BASE_URL } from "./constants";
+import { supabase } from "@/lib/database";
 
 type StreamChunk = {
   content: string;
@@ -48,11 +49,17 @@ export function useStream(): UseStreamReturn {
       setData("");
 
       try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const token = session?.access_token;
+
         const response = await fetch(`${BASE_URL}${url}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Accept: "text/event-stream",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify(body),
           signal: controller.signal,

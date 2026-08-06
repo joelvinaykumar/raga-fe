@@ -118,9 +118,27 @@ module.exports = {
         carousel: "carousel 40s linear infinite",
       },
       fontFamily: {
-        sans: ['"Space Grotesk"', "sans"],
-        serif: ['"Bodoni Moda"', "serif"], // Replace with your font
-        mono: ['"Space Mono"', "monospace"], // Replace with your font
+        sans: [
+          '"Cabinet Grotesk"',
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        serif: [
+          '"Cabinet Grotesk"',
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
+        mono: [
+          '"Cabinet Grotesk"',
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
     },
   },
