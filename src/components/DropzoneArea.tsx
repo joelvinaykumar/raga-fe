@@ -1,4 +1,8 @@
-import { useCallback } from "react";
+import {
+  useCallback,
+  type HTMLAttributes,
+  type InputHTMLAttributes,
+} from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, AlertCircle } from "lucide-react";
 
@@ -37,12 +41,16 @@ export function DropzoneArea({
       disabled,
     });
 
+  const rootProps = getRootProps() as unknown as HTMLAttributes<HTMLDivElement>;
+  const inputProps =
+    getInputProps() as unknown as InputHTMLAttributes<HTMLInputElement>;
+
   return (
     <div
-      {...getRootProps()}
+      {...rootProps}
       className={`flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg transition-colors ${disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary"} ${isDragActive ? "bg-primary/10" : "bg-primary/10"}`}
     >
-      <input {...getInputProps()} />
+      <input {...inputProps} />
       <Upload className="h-8 w-8 text-primary mb-2" />
       <p className="text-sm text-muted-foreground dark:text-foreground text-center">
         Drag & drop files here, or click to select
