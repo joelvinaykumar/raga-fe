@@ -49,7 +49,7 @@ if (!rootElement.innerHTML) {
         <QueryClientProvider client={queryClient}>
           <App />
           <Toaster
-            closeButton
+            closeButton={false}
             position="top-right"
             theme="system"
             toastOptions={{

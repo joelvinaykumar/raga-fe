@@ -24,7 +24,7 @@ The frontend is a modern **Vite + React + TypeScript** SPA backed by a **FastAPI
 
 ## Features
 
-- **Streaming chat** — answers stream in over SSE, rendered live as Markdown (tables, code blocks with syntax highlighting, math via KaTeX, emojis, and even basic Mermaid-style diagrams).
+- **Streaming chat** — answers stream in over SSE, rendered live as GitHub-Flavored Markdown (tables, code blocks, lists, and inline citations with source-preview tooltips).
 - **Session-based conversations** — every chat is a session; sessions are listed, resumed, and deleted from the sidebar.
 - **Knowledge base** — attach documents (PDF / DOCX / HTML) to a session to ground the model's answers.
 - **Model switching** — toggle between GPT-4o and GPT-4o-mini per session.

@@ -23,20 +23,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useHomeStore((state) => state);
 
   const login = async (input: { email: string; password: string }) => {
-    try {
-      const res = await supabase.auth.signInWithPassword(input);
-      if (res.data.session?.access_token) {
-        console.log({ res: res.data });
-        setIsAuthenticated(!!res.data.session);
-        setCurrentUser(res.data.user);
-        window.location.href = "/";
-      }
+    const res = await supabase.auth.signInWithPassword(input);
 
-      if (res.error) {
-        console.error("Error signing in with password => ", res.error);
-      }
-    } catch (error) {
-      console.error("Error signing in with password => ", error);
+    if (res.error) {
+      console.error("Error signing in with password => ", res.error);
+      // Surface the failure to the caller so it can alert the user.
+      throw res.error;
+    }
+
+    if (res.data.session?.access_token) {
+      setIsAuthenticated(!!res.data.session);
+      setCurrentUser(res.data.user);
+      window.location.href = "/";
     }
   };
 

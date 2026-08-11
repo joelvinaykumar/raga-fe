@@ -2,11 +2,38 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
+        <meta name="description" content="RAGA is a multi-tenant RAG platform for building knowledge bases, uploading documents, and chatting with grounded, source-aware LLM responses." />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <meta name="theme-color" content="#340075" />
         <link rel="icon" type="image/png" href="/raga-favicon.png" />
+        <link rel="canonical" href="https://raga-fe.vercel.app/" />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM guidance" />
+        <link
+            rel="preload"
+            href="/fonts/cabinet-grotesk-400.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <link
+            rel="preload"
+            href="/fonts/cabinet-grotesk-700.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <link
+            rel="preload"
+            href="/fonts/geist-mono-latin.woff2"
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://raga-fe.vercel.app" />
         <meta property="og:title" content="RAGA - RAG As A Service" />
+        <meta property="og:locale" content="en_US" />
         <meta
             property="og:description"
             content="A multi-tenant RAG SaaS to create knowledgebases and plug them into your LLM agents. Implemented streaming responses with source citations across conversations."
@@ -15,6 +42,7 @@
             property="og:image"
             content="https://raga-fe.vercel.app/og-image.jpg"
         />
+        <meta property="og:image:alt" content="RAGA platform preview" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/jpeg" />
@@ -30,6 +58,16 @@
             name="twitter:image"
             content="https://raga-fe.vercel.app/og-image.jpg"
         />
+        <meta name="twitter:image:alt" content="RAGA platform preview" />
+        <script type="application/ld+json">
+            {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "RAGA",
+                "url": "https://raga-fe.vercel.app/",
+                "description": "RAG As A Service for creating knowledge bases and running grounded AI chat with sources."
+            }
+        </script>
         <title>RAGA - Rag As A Service</title>
     </head>
     <body>

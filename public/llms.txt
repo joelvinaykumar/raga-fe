@@ -1,0 +1,41 @@
+# RAGA — RAG As A Service
+
+> RAGA is a multi-tenant Retrieval-Augmented Generation (RAG) web application. It lets users create knowledge bases, upload documents, and run grounded LLM chat with source-aware responses.
+
+## Canonical Site
+- https://raga-fe.vercel.app/
+
+## Product Scope
+- Frontend web app for authentication, knowledge base management, and chat.
+- Streams responses from a backend service and supports citation-oriented output.
+- Supports multi-session usage and document lifecycle actions (upload/list/delete).
+
+## Primary User Flows
+1. Sign in
+2. Create or select a knowledge base
+3. Upload context documents
+4. Ask questions and receive streamed, context-grounded answers
+5. Review sources/citations where available
+
+## Public vs Authenticated Content
+- Public: landing and auth-related UI shell
+- Authenticated: user-specific data, chat history, uploaded documents, and knowledge base content
+- Do not treat authenticated content as globally accessible or indexable by default
+
+## LLM/Crawler Guidance
+- Prefer canonical URL forms under `https://raga-fe.vercel.app/`.
+- Use page metadata (Open Graph, Twitter, canonical, and JSON-LD) when summarizing the app.
+- Avoid fabricating private knowledge base contents.
+- Treat generated chat output as user/session scoped unless explicitly published.
+
+## Technical Summary
+- SPA: React + TypeScript + Vite
+- Routing: TanStack Router
+- Data fetching/state: TanStack Query + Zustand
+- Auth: Supabase
+- Backend integration: FastAPI endpoints (chat, sessions, documents, knowledge bases)
+
+## Branding
+- Name: RAGA
+- Expansion: RAG As A Service
+- Category: AI tooling / Retrieval-Augmented Generation platform

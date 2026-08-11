@@ -1,7 +1,10 @@
 import z from "zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { AlertCircle } from "lucide-react";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/auth-context";
@@ -19,6 +22,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const { login, loginWithGoogle } = useAuth();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const formSchema = z.object({
     email: z.email(),
@@ -34,14 +38,25 @@ export function LoginForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await login(values);
+    setErrorMessage(null);
+    try {
+      await login(values);
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in. Please check your credentials and try again.",
+      );
+    }
   };
 
   const onGoogleLogin = async () => {
+    setErrorMessage(null);
     try {
       await loginWithGoogle();
     } catch (error) {
       console.error("google error => ", error);
+      setErrorMessage("Could not sign in with Google. Please try again.");
     }
   };
 
@@ -60,6 +75,12 @@ export function LoginForm({
       </div>
 
       <div className="space-y-3">
+        {errorMessage && (
+          <Alert variant="destructive" className="mb-2">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
         <Button
           type="button"
           variant="outline"

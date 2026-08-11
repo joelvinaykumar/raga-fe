@@ -12,7 +12,6 @@ import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { AxiosResponse } from "axios";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { FileAttachment } from "..";
 import { ChatInput } from "../-components/chat-input";
 import { ChatSkeletonLoader } from "../-components/chat-skeleton-loader";
@@ -30,6 +29,8 @@ function RouteComponent() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const initialQuerySubmittedRef = useRef<string | null>(null);
+  const chunkBufferRef = useRef("");
+  const frameRef = useRef<number | null>(null);
 
   const [query, setQuery] = useState<string>("");
   const [model, setModel] = useState<Model>("gpt-4o-mini");
@@ -87,6 +88,34 @@ function RouteComponent() {
       behavior,
     });
 
+  const applyBufferedAssistantChunks = () => {
+    const chunk = chunkBufferRef.current;
+    chunkBufferRef.current = "";
+
+    if (!chunk) return;
+
+    setMessages((prev) => {
+      const last = prev[prev.length - 1];
+      if (last?.role === "assistant") {
+        return [
+          ...prev.slice(0, -1),
+          { ...last, content: last.content + chunk },
+        ];
+      }
+      return prev;
+    });
+  };
+
+  const scheduleAssistantChunkApply = () => {
+    if (frameRef.current !== null) return;
+
+    frameRef.current = window.requestAnimationFrame(() => {
+      frameRef.current = null;
+      applyBufferedAssistantChunks();
+      scrollToBottom("auto");
+    });
+  };
+
   const onSubmit = async (message?: string) => {
     if (isStreaming) return;
     const content = message ?? query;
@@ -112,6 +141,7 @@ function RouteComponent() {
 
     try {
       setIsStreaming(true);
+      chunkBufferRef.current = "";
       await streamChat(
         "/chat",
         {
@@ -120,19 +150,8 @@ function RouteComponent() {
           model: "gpt-4o-mini",
         },
         (chunk: string) => {
-          flushSync(() => {
-            setMessages((prev) => {
-              const last = prev[prev.length - 1];
-              if (last?.role === "assistant") {
-                return [
-                  ...prev.slice(0, -1),
-                  { ...last, content: last.content + chunk },
-                ];
-              }
-              return prev;
-            });
-          });
-          scrollToBottom("auto");
+          chunkBufferRef.current += chunk;
+          scheduleAssistantChunkApply();
         },
         (meta) => {
           setMessages((prev) => {
@@ -149,6 +168,11 @@ function RouteComponent() {
           });
         },
       );
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      applyBufferedAssistantChunks();
       setIsStreaming(false);
       window.history.replaceState({}, "", window.location.pathname);
       setMessages((prev) =>
@@ -204,6 +228,12 @@ function RouteComponent() {
         },
       ]);
     } finally {
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      applyBufferedAssistantChunks();
+      setIsStreaming(false);
       setTimeout(scrollToBottom, 100);
     }
   };
@@ -252,6 +282,10 @@ function RouteComponent() {
 
     return () => {
       cancelled = true;
+      if (frameRef.current !== null) {
+        window.cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
       window.history.replaceState({}, "", window.location.pathname);
     };
   }, [fetchDocs, fetchChatHistory, sessionId, stateQuery]);

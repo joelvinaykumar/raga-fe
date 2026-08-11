@@ -1,5 +1,58 @@
-@import url("https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap");
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/fonts/cabinet-grotesk-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/fonts/cabinet-grotesk-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/fonts/cabinet-grotesk-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Cabinet Grotesk";
+  src: url("/fonts/cabinet-grotesk-800.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono-latin.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono-latin.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/geist-mono-latin.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
 
 :root {
   /* Font families */
@@ -11,10 +64,6 @@
     "Liberation Mono", "Courier New", monospace;
 }
 
-* {
-  font-family: var(--font-sans);
-}
-
 html {
   scroll-behavior: smooth;
 }
@@ -24,10 +73,6 @@ pre,
 tt,
 kbd,
 samp {
-  font-family: var(--font-mono);
-}
-
-.syntax-highlighter code {
   font-family: var(--font-mono);
 }
 
@@ -372,29 +417,6 @@ samp {
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
-  }
-
-  .math-block {
-    display: block;
-    text-align: center;
-    margin: 1rem 0;
-    padding: 1rem;
-    background-color: #f9fafb;
-    border-radius: 0.5rem;
-    font-family: var(--font-sans);
-  }
-
-  .math-inline {
-    font-family: var(--font-sans);
-    font-style: italic;
-  }
-
   @keyframes shine {
     0% {
       background-position: 200% center;
@@ -624,4 +646,27 @@ samp {
 
 .dark .login-hue-blob {
   opacity: 0.3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .login-hue-blob,
+  .shimmer,
+  .loading-dots,
+  .markdown-streaming,
+  .fade-in-text,
+  .animate-shine {
+    animation: none !important;
+  }
 }

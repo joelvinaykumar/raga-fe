@@ -29,6 +29,7 @@ RAGA — a Vite + React 18 + TypeScript RAG chat UI ("Rag As A Service"). Authen
 - **Lint**: Biome (`bun run lint`). `noUnusedVariables` is an error; `noExplicitAny` is off (loose `any` is accepted). Auto-fix with `bun run lint --write`.
 - **Buttons**: the shadcn `Button` does not set `type`; native default is `type="submit"`. Non-form buttons need explicit `type="button"`, and pass no args to handlers (`onClick={() => fn()}`) — route `onSubmit(message?)` treats its first arg as the chat message.
 - **UI**: shadcn/ui primitives in `src/components/ui/*`, `cn()` from `@/lib/utils`, Tailwind, sonner toasts, framer-motion, lucide icons, `@/` alias → `src`.
+- **Markdown**: `@/components/custom/markdown` is a thin `React.lazy` wrapper (`Suspense`) around `markdown-impl.tsx`, which holds the heavy `react-markdown` + remark/rehype stack — keep it code-split so it stays out of the initial bundle. The renderer is intentionally lean: GFM only (`remark-gfm`, `rehype-raw`, `rehype-slug`). No KaTeX/math, syntax-highlighter, or emoji deps — don't re-add them without cause. Only `framer-motion` is used for animation (the `motion` package was removed).
 
 ## Known issues
 
