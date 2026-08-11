@@ -626,8 +626,8 @@ function KnowledgeBaseDetail() {
       {/* Center workspace containing Name, Description, Chat stream and Pill Input */}
       <section className="flex flex-1 flex-col h-full overflow-hidden border-r border-border px-6 py-6 lg:px-10">
         {/* Workspace Upper Bar */}
-        <div className="flex items-start justify-between border-b border-border pb-4">
-          <div className="space-y-1 max-w-2xl min-w-0">
+        <div className="flex items-start justify-between border-b border-border pb-4 w-full">
+          <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
               <h1 className="font-serif text-3xl font-bold leading-none text-foreground truncate">
                 {ragInfo?.name}
@@ -918,7 +918,7 @@ function KnowledgeBaseDetail() {
           </div>
 
           {/* Uploaded Files list */}
-          <div className="flex flex-col gap-2 max-h-56 overflow-y-auto no-scrollbar">
+          <div className="flex flex-col gap-2 max-h-fit overflow-y-auto no-scrollbar">
             {isFilesLoading && files.length === 0 ? (
               <div className="space-y-2">
                 {[...Array(3)].map((_, i) => (

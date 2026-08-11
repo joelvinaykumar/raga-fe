@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ChatInput } from "./-components/chat-input";
 import { generateSessionId } from "@/lib/utils";
 import { Model } from "@/lib/types";
+import { useAuth } from "@/contexts/auth-context";
 
 export const Route = createFileRoute("/_layout/chat/")({
   component: RouteComponent,
@@ -18,6 +19,7 @@ export type FileAttachment = {
 
 function RouteComponent() {
   const navigate = useNavigate();
+  const { current_user } = useAuth();
   const [query, setQuery] = useState<string>("");
   const [model, setModel] = useState<Model>("gpt-4o-mini");
 
@@ -37,7 +39,8 @@ function RouteComponent() {
           NexusRAG Editorial System
         </div>
         <h1 className="text-5xl font-serif font-bold text-[#1e1b19] dark:text-[#f4ece8] tracking-tight leading-tight">
-          Hey Elliot 👋 What’s on your mind today?
+          Hey {current_user?.user_metadata?.full_name || "there"} 👋 What’s on
+          your mind today?
         </h1>
         <p className="text-sm text-[#4a4452] dark:text-[#9c95a6] font-sans">
           Initiate a clean editorial context. Connect documents or prompt the

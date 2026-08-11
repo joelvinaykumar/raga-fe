@@ -1,6 +1,12 @@
 import { CopyMessage } from "@/components/custom/copy-message";
 import MarkdownRenderer from "@/components/custom/markdown";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -9,7 +15,6 @@ import type { CitationMeta, SourceChunkMeta } from "@/lib/stream";
 import { cn } from "@/lib/utils";
 import React from "react";
 import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
 
 export const MessageBubble: React.FC<{
   msg: {
@@ -23,31 +28,21 @@ export const MessageBubble: React.FC<{
   bubbleIndex?: number;
 }> = ({ msg, bubbleIndex = 0 }) => {
   const staggerDelay = Math.min(bubbleIndex * 0.05, 0.35);
-  const [openSection, setOpenSection] = React.useState<
-    "citations" | "sources" | null
-  >(null);
-  const [openCitationItem, setOpenCitationItem] = React.useState<string | null>(
-    null,
-  );
-  const [openSourceItem, setOpenSourceItem] = React.useState<string | null>(
-    null,
-  );
+  const sourceChunks = msg.chunks ?? [];
   const citations = (msg.citations ?? []).filter(
     (citation) => typeof citation.index === "number",
   );
-  const sourceChunks = msg.chunks ?? [];
 
-  // Insert citation markers inline at each citation's character position so the
-  // reference (e.g. `[1]`) renders right where the grounded text ends, instead
-  // of in a separate list after the message.
   const contentWithCitations = React.useMemo(() => {
     if (msg.role !== "assistant" || msg.loading || citations.length === 0) {
       return msg.content;
     }
+
     let text = msg.content;
     const ordered = [...citations].sort(
       (a, b) => (b.display_char ?? 0) - (a.display_char ?? 0),
     );
+
     for (const citation of ordered) {
       const rawPos = citation.display_char ?? citation.end_char ?? text.length;
       const pos = Math.min(Math.max(rawPos, 0), text.length);
@@ -55,9 +50,11 @@ export const MessageBubble: React.FC<{
         .replace(/"/g, "&quot;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
+
       const marker = `<sup class="citation-ref" data-citation-index="${citation.index}" data-preview="${preview}">[${citation.index}]</sup>`;
       text = `${text.slice(0, pos)}${marker}${text.slice(pos)}`;
     }
+
     return text;
   }, [msg.content, msg.role, msg.loading, citations]);
 
@@ -107,88 +104,70 @@ export const MessageBubble: React.FC<{
             {msg.role === "assistant" &&
               citations.length > 0 &&
               !msg.loading && (
-                <div className="mt-2 rounded-lg border border-border/70 bg-background/35 px-2.5 py-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setOpenSection((current) =>
-                        current === "citations" ? null : "citations",
-                      )
-                    }
-                    className="flex w-full items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
-                  >
-                    <span>Citations ({citations.length})</span>
-                    <ChevronDown
-                      className={cn(
-                        "size-3 transition-transform",
-                        openSection === "citations" && "rotate-180",
-                      )}
-                    />
-                  </button>
-                  {openSection === "citations" && (
-                    <div className="mt-2 space-y-2">
-                      {citations.map((citation) => {
-                        const citationKey = `${citation.index}-${citation.display_char}`;
-                        const citationOpen = openCitationItem === citationKey;
-                        return (
-                          <div
-                            key={citationKey}
-                            className="rounded-md border border-border/60 bg-background/50 px-2 py-1.5"
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setOpenCitationItem((current) =>
-                                  current === citationKey ? null : citationKey,
-                                )
-                              }
-                              className="flex w-full items-center gap-2 py-0.5"
+                <Accordion
+                  type="single"
+                  collapsible
+                  className="mt-2 rounded-lg border border-border/70 bg-background/35 px-2.5"
+                >
+                  <AccordionItem value="citations" className="border-none">
+                    <AccordionTrigger className="py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:no-underline">
+                      Citations ({citations.length})
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-2 pt-1">
+                      <Accordion
+                        type="single"
+                        collapsible
+                        className="space-y-2"
+                      >
+                        {citations.map((citation) => {
+                          const citationKey = `${citation.index}-${citation.display_char}`;
+                          return (
+                            <AccordionItem
+                              key={citationKey}
+                              value={citationKey}
+                              className="rounded-md border border-border/60 bg-background/50 px-2"
                             >
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span
-                                    className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-[10px] font-mono font-semibold text-primary"
-                                    aria-label={`Citation ${citation.index}`}
-                                  >
-                                    {citation.index}
+                              <AccordionTrigger className="py-1.5 hover:no-underline">
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span
+                                        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-[10px] font-mono font-semibold text-primary"
+                                        aria-label={`Citation ${citation.index}`}
+                                      >
+                                        {citation.index}
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent
+                                      side="top"
+                                      className="w-72 border-border bg-popover text-popover-foreground"
+                                    >
+                                      <div className="space-y-1.5 text-xs">
+                                        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                                          Source {citation.index} · char{" "}
+                                          {citation.display_char}
+                                        </p>
+                                        <p className="font-semibold text-foreground">
+                                          {citation.filename ||
+                                            citation.chunk_id ||
+                                            "Indexed source"}
+                                        </p>
+                                        {citation.quote ? (
+                                          <p className="text-muted-foreground line-clamp-3">
+                                            {citation.quote}
+                                          </p>
+                                        ) : null}
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  <span className="truncate text-[11px] font-semibold text-foreground">
+                                    {citation.filename ||
+                                      citation.chunk_id ||
+                                      "Indexed source"}
                                   </span>
-                                </TooltipTrigger>
-                                <TooltipContent
-                                  side="top"
-                                  className="w-72 border-border bg-popover text-popover-foreground"
-                                >
-                                  <div className="space-y-1.5 text-xs">
-                                    <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
-                                      Source {citation.index} · char{" "}
-                                      {citation.display_char}
-                                    </p>
-                                    <p className="font-semibold text-foreground">
-                                      {citation.filename ||
-                                        citation.chunk_id ||
-                                        "Indexed source"}
-                                    </p>
-                                    {citation.quote ? (
-                                      <p className="text-muted-foreground line-clamp-3">
-                                        {citation.quote}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                </TooltipContent>
-                              </Tooltip>
-                              <span className="truncate text-[11px] font-semibold text-foreground">
-                                {citation.filename ||
-                                  citation.chunk_id ||
-                                  "Indexed source"}
-                              </span>
-                              <ChevronDown
-                                className={cn(
-                                  "ml-auto size-3 text-muted-foreground transition-transform",
-                                  citationOpen && "rotate-180",
-                                )}
-                              />
-                            </button>
-                            {citationOpen && (
-                              <div className="pb-0.5 pt-1">
+                                </span>
+                              </AccordionTrigger>
+                              <AccordionContent className="pb-1 pt-0">
                                 {citation.quote ? (
                                   <p className="line-clamp-3 text-[11px] text-muted-foreground">
                                     {citation.quote}
@@ -204,72 +183,56 @@ export const MessageBubble: React.FC<{
                                     Open source preview
                                   </a>
                                 ) : null}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          );
+                        })}
+                      </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               )}
 
             {msg.role === "assistant" &&
               sourceChunks.length > 0 &&
               !msg.loading && (
-                <div className="mt-2 rounded-lg border border-border/70 bg-background/35 px-2.5 py-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setOpenSection((current) =>
-                        current === "sources" ? null : "sources",
-                      )
-                    }
-                    className="flex w-full items-center justify-between font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground"
-                  >
-                    <span>Sources ({sourceChunks.length})</span>
-                    <ChevronDown
-                      className={cn(
-                        "size-3 transition-transform",
-                        openSection === "sources" && "rotate-180",
-                      )}
-                    />
-                  </button>
-                  {openSection === "sources" && (
-                    <div className="mt-2 space-y-2">
-                      {sourceChunks.map((chunk, idx) => {
-                        const badgeNumber = chunk.index ?? idx + 1;
-                        const sourceKey = `${chunk.chunk_id ?? "chunk"}-${idx}`;
-                        const sourceOpen = openSourceItem === sourceKey;
-                        return (
-                          <div
-                            key={sourceKey}
-                            className="rounded-md border border-border/60 bg-background/50 px-2 py-1.5"
-                          >
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setOpenSourceItem((current) =>
-                                  current === sourceKey ? null : sourceKey,
-                                )
-                              }
-                              className="mb-0.5 flex w-full items-center gap-2 py-0.5"
+                <Accordion
+                  type="single"
+                  collapsible
+                  className="mt-2 rounded-lg border border-border/70 bg-background/35 px-2.5"
+                >
+                  <AccordionItem value="sources" className="border-none">
+                    <AccordionTrigger className="py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:no-underline">
+                      Sources ({sourceChunks.length})
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-2 pt-1">
+                      <Accordion
+                        type="single"
+                        collapsible
+                        className="space-y-2"
+                      >
+                        {sourceChunks.map((chunk, idx) => {
+                          const badgeNumber = chunk.index ?? idx + 1;
+                          const sourceKey = `${chunk.chunk_id ?? "chunk"}-${idx}`;
+                          return (
+                            <AccordionItem
+                              key={sourceKey}
+                              value={sourceKey}
+                              className="rounded-md border border-border/60 bg-background/50 px-2"
                             >
-                              <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-[10px] font-mono font-semibold text-primary">
-                                {badgeNumber}
-                              </span>
-                              <span className="truncate text-[11px] font-semibold text-foreground">
-                                {chunk.filename || chunk.chunk_id || "Chunk"}
-                              </span>
-                              <ChevronDown
-                                className={cn(
-                                  "ml-auto size-3 text-muted-foreground transition-transform",
-                                  sourceOpen && "rotate-180",
-                                )}
-                              />
-                            </button>
-                            {sourceOpen && (
-                              <div className="pb-0.5 pt-1">
+                              <AccordionTrigger className="py-1.5 hover:no-underline">
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-primary/45 bg-primary/10 text-[10px] font-mono font-semibold text-primary">
+                                    {badgeNumber}
+                                  </span>
+                                  <span className="truncate text-[11px] font-semibold text-foreground">
+                                    {chunk.filename ||
+                                      chunk.chunk_id ||
+                                      "Chunk"}
+                                  </span>
+                                </span>
+                              </AccordionTrigger>
+                              <AccordionContent className="pb-1 pt-0">
                                 <p className="line-clamp-3 text-[11px] text-muted-foreground">
                                   {chunk.preview || chunk.content}
                                 </p>
@@ -283,14 +246,14 @@ export const MessageBubble: React.FC<{
                                     View chunk source
                                   </a>
                                 ) : null}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          );
+                        })}
+                      </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               )}
 
             <p
