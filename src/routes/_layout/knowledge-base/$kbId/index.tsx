@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_layout/knowledge-base/$kbId/")({
 function KnowledgeBaseDetail() {
   const { kbId } = Route.useParams();
   const search = Route.useSearch();
+  const navigate = Route.useNavigate();
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
@@ -39,16 +40,10 @@ function KnowledgeBaseDetail() {
   }, []);
 
   const clearConsumedQueryFromUrl = () => {
-    if (typeof window === "undefined") return;
-
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has("q")) return;
-
-    // Removes every `q` occurrence while preserving all other params + hash.
-    url.searchParams.delete("q");
-    const nextSearch = url.searchParams.toString();
-    const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash}`;
-    window.history.replaceState(window.history.state, "", nextUrl);
+    navigate({
+      replace: true,
+      search: { q: undefined },
+    });
   };
 
   const {
@@ -63,7 +58,7 @@ function KnowledgeBaseDetail() {
     editKb,
   } = useKnowledgeBaseWorkspace(kbId, {
     initialQuery: search.q,
-    onInitialQuerySuccess: clearConsumedQueryFromUrl,
+    onInitialQueryExecuted: clearConsumedQueryFromUrl,
   });
 
   if (loadingData) {

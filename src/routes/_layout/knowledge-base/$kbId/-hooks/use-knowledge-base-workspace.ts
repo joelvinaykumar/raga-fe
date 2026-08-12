@@ -15,7 +15,7 @@ import { useMcpConnection } from "./use-mcp-connection";
 
 type KnowledgeBaseWorkspaceOptions = {
   initialQuery?: string;
-  onInitialQuerySuccess?: () => void;
+  onInitialQueryExecuted?: () => void;
 };
 
 /**
@@ -30,7 +30,7 @@ export function useKnowledgeBaseWorkspace(
   options: KnowledgeBaseWorkspaceOptions = {},
 ) {
   const navigate = useNavigate();
-  const { initialQuery, onInitialQuerySuccess } = options;
+  const { initialQuery, onInitialQueryExecuted } = options;
 
   const [loadingData, setLoadingData] = useState(true);
   const [ragInfo, setRagInfo] = useState<RagInfo | null>(null);
@@ -192,16 +192,14 @@ export function useKnowledgeBaseWorkspace(
       .then((success) => {
         if (cancelled) return;
 
-        if (success) {
-          onInitialQuerySuccess?.();
-          return;
+        if (!success) {
+          // Preserve failed bootstrapped prompt in the input for quick retry.
+          setQuery(normalizedQuery);
         }
-
-        // Preserve failed bootstrapped prompt in the input for quick retry.
-        setQuery(normalizedQuery);
       })
       .finally(() => {
         if (!cancelled) {
+          onInitialQueryExecuted?.();
           initialQueryInFlightRef.current = false;
         }
       });
@@ -214,7 +212,7 @@ export function useKnowledgeBaseWorkspace(
     isStreaming,
     kbId,
     loadingData,
-    onInitialQuerySuccess,
+    onInitialQueryExecuted,
     sessionId,
     setQuery,
     submit,
