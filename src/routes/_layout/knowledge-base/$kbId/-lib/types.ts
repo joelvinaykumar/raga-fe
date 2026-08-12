@@ -1,4 +1,8 @@
-import type { CitationMeta, SourceChunkMeta } from "@/lib/stream";
+import type {
+  CitationMeta,
+  GenerativeUiPayload,
+  SourceChunkMeta,
+} from "@/lib/stream";
 import type { Sparkles } from "lucide-react";
 
 export type Message = {
@@ -8,6 +12,7 @@ export type Message = {
   loading: boolean;
   citations?: CitationMeta[];
   chunks?: SourceChunkMeta[];
+  ui?: GenerativeUiPayload;
 };
 
 export type RagDocument = {

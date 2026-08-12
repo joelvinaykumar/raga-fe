@@ -8,14 +8,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { BACKEND_MODEL_OPTIONS, type Model } from "@/lib/types";
 import { humanReadableSize } from "@/lib/utils";
 import { FileText, FolderOpen, Loader2, Sliders, X } from "lucide-react";
 import type { RagDocument } from "../-lib/types";
 
 interface ConfigSidebarProps {
   // config
-  llmModel: string;
-  onLlmModelChange: (value: string) => void;
+  llmModel: Model;
+  onLlmModelChange: (value: Model) => void;
   topK: number;
   onTopKChange: (value: number) => void;
   embeddingModel: string;
@@ -75,16 +76,19 @@ export function ConfigSidebar({
           <label className="font-mono text-[10px] uppercase tracking-[0.2em] font-bold text-foreground">
             LLM Model
           </label>
-          <Select value={llmModel} onValueChange={onLlmModelChange}>
+          <Select
+            value={llmModel}
+            onValueChange={(value) => onLlmModelChange(value as Model)}
+          >
             <SelectTrigger className="h-10 rounded-lg border-input bg-background font-mono text-xs text-foreground focus:ring-primary">
               <SelectValue placeholder="Select LLM model" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border text-popover-foreground">
-              <SelectItem value="gpt-4o-mini">gpt-4o-mini</SelectItem>
-              <SelectItem value="gpt-4o">gpt-4o</SelectItem>
-              <SelectItem value="gpt-4-turbo-preview">
-                gpt-4-turbo-preview
-              </SelectItem>
+              {BACKEND_MODEL_OPTIONS.map((model) => (
+                <SelectItem key={model} value={model}>
+                  {model}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

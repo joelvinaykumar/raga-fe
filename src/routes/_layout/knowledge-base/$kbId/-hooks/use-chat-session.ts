@@ -3,9 +3,10 @@ import { flushSync } from "react-dom";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
 import { useStream } from "@/lib/stream";
+import type { Model } from "@/lib/types";
 import type { Message } from "../-lib/types";
 
-type ChatParams = { topK: number; model: string };
+type ChatParams = { topK: number; model: Model };
 
 /**
  * Owns an active chat session bound to a knowledge base: the persistent
@@ -57,7 +58,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
 
   const submit = async (messageText?: string) => {
     const text = messageText ?? query;
-    if (!text.trim() || isStreaming) return;
+    if (!text.trim() || isStreaming) return false;
 
     const { topK, model: llmModel } = getChatParams();
 
@@ -77,6 +78,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
         loading: true,
         citations: [],
         chunks: [],
+        ui: undefined,
       },
     ]);
     setTimeout(() => scrollToBottom(), 80);
@@ -90,8 +92,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
           session_id: sessionId,
           knowledgebase_id: kbId,
           top_k: topK,
-          model:
-            llmModel === "gpt-4-turbo-preview" ? "gpt-4o" : (llmModel as any),
+          model: llmModel,
         },
         (chunk: string) => {
           flushSync(() => {
@@ -119,6 +120,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
                 ...last,
                 citations: meta.citations ?? last.citations ?? [],
                 chunks: meta.chunks ?? last.chunks ?? [],
+                ui: meta.ui ?? last.ui,
               },
             ];
           });
@@ -133,9 +135,12 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
             : msg,
         ),
       );
+      return true;
     } catch (err: any) {
       console.error("Chat runtime stream failed", err);
       const errorMessage =
+        err?.data?.error?.message ||
+        err?.message ||
         err?.data?.detail ||
         err?.data?.message ||
         "LLM completion interrupted. Please retry.";
@@ -148,8 +153,10 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
           loading: false,
           citations: [],
           chunks: [],
+          ui: undefined,
         },
       ]);
+      return false;
     } finally {
       setIsStreaming(false);
       setTimeout(() => scrollToBottom(), 80);

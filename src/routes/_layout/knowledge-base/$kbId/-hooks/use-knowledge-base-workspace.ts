@@ -13,6 +13,11 @@ import { useKnowledgeBaseConfig } from "./use-knowledge-base-config";
 import { useKnowledgeBaseFiles } from "./use-knowledge-base-files";
 import { useMcpConnection } from "./use-mcp-connection";
 
+type KnowledgeBaseWorkspaceOptions = {
+  initialQuery?: string;
+  onInitialQuerySuccess?: () => void;
+};
+
 /**
  * Top-level orchestration hook for a knowledge base workspace. Composes the
  * focused hooks (chat session, config, files, MCP) and owns the cross-cutting
@@ -20,8 +25,12 @@ import { useMcpConnection } from "./use-mcp-connection";
  * the edit/delete knowledge base dialogs. The route component consumes this
  * single hook and stays purely presentational.
  */
-export function useKnowledgeBaseWorkspace(kbId: string) {
+export function useKnowledgeBaseWorkspace(
+  kbId: string,
+  options: KnowledgeBaseWorkspaceOptions = {},
+) {
   const navigate = useNavigate();
+  const { initialQuery, onInitialQuerySuccess } = options;
 
   const [loadingData, setLoadingData] = useState(true);
   const [ragInfo, setRagInfo] = useState<RagInfo | null>(null);
@@ -49,7 +58,18 @@ export function useKnowledgeBaseWorkspace(kbId: string) {
 
   const { setFiles, setIsFilesLoading } = filesApi;
   const { hydrate } = config;
-  const { sessionId, setMessages, setIsHistoryLoading, scrollRef } = chat;
+  const {
+    sessionId,
+    setMessages,
+    setIsHistoryLoading,
+    scrollRef,
+    submit,
+    setQuery,
+    isStreaming,
+  } = chat;
+
+  const initialQueryKeyRef = useRef<string | null>(null);
+  const initialQueryInFlightRef = useRef(false);
 
   // Load workspace properties for this knowledge base.
   useEffect(() => {
@@ -84,6 +104,12 @@ export function useKnowledgeBaseWorkspace(kbId: string) {
               loading: false,
               citations: Array.isArray(msg.citations) ? msg.citations : [],
               chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
+              ui:
+                msg.ui &&
+                typeof msg.ui === "object" &&
+                Array.isArray(msg.ui.blocks)
+                  ? msg.ui
+                  : undefined,
             })),
           );
         }
@@ -142,6 +168,56 @@ export function useKnowledgeBaseWorkspace(kbId: string) {
     setIsHistoryLoading,
     hydrate,
     scrollRef,
+  ]);
+
+  // Bootstrap the first message from `?q=` once the workspace is ready.
+  useEffect(() => {
+    const normalizedQuery = initialQuery?.trim() ?? "";
+    if (!normalizedQuery || normalizedQuery.length < 3) return;
+    if (!sessionId || loadingData || isStreaming) return;
+
+    const queryKey = `${kbId}:${sessionId}:${normalizedQuery}`;
+    if (
+      initialQueryKeyRef.current === queryKey ||
+      initialQueryInFlightRef.current
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    initialQueryKeyRef.current = queryKey;
+    initialQueryInFlightRef.current = true;
+
+    submit(normalizedQuery)
+      .then((success) => {
+        if (cancelled) return;
+
+        if (success) {
+          onInitialQuerySuccess?.();
+          return;
+        }
+
+        // Preserve failed bootstrapped prompt in the input for quick retry.
+        setQuery(normalizedQuery);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          initialQueryInFlightRef.current = false;
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    initialQuery,
+    isStreaming,
+    kbId,
+    loadingData,
+    onInitialQuerySuccess,
+    sessionId,
+    setQuery,
+    submit,
   ]);
 
   const openEditDialog = () => {

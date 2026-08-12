@@ -7,6 +7,16 @@ type StreamChunk = {
   done?: boolean;
   citations?: CitationMeta[];
   chunks?: SourceChunkMeta[];
+  ui?: GenerativeUiPayload;
+  error?: ApiErrorEnvelope;
+  request_id?: string;
+};
+
+export type ApiErrorEnvelope = {
+  code: string;
+  message: string;
+  details?: string | null;
+  request_id?: string | null;
 };
 
 export type CitationMeta = {
@@ -35,9 +45,99 @@ export type SourceChunkMeta = {
   preview?: string | null;
 };
 
+export type UiMetric = {
+  label: string;
+  value: string;
+};
+
+export type UiCardBlock = {
+  type: "card";
+  title: string;
+  body?: string | null;
+  metrics?: UiMetric[];
+};
+
+export type UiTableBlock = {
+  type: "table";
+  title?: string | null;
+  columns: string[];
+  rows: string[][];
+};
+
+export type UiBlock = UiCardBlock | UiTableBlock;
+
+export type GenerativeUiPayload = {
+  version?: number;
+  blocks: UiBlock[];
+};
+
 type StreamMeta = {
   citations?: CitationMeta[];
   chunks?: SourceChunkMeta[];
+  ui?: GenerativeUiPayload;
+  request_id?: string;
+};
+
+const FALLBACK_STREAM_ERROR =
+  "The LLM service is currently unavailable. Please try again later.";
+
+const isValidUiPayload = (value: unknown): value is GenerativeUiPayload => {
+  if (!value || typeof value !== "object") return false;
+  const maybe = value as { blocks?: unknown };
+  return Array.isArray(maybe.blocks);
+};
+
+const toApiErrorEnvelope = (
+  payload: unknown,
+  fallbackMessage = FALLBACK_STREAM_ERROR,
+): ApiErrorEnvelope => {
+  const asRecord =
+    payload && typeof payload === "object"
+      ? (payload as Record<string, unknown>)
+      : {};
+  const nestedError =
+    asRecord.error && typeof asRecord.error === "object"
+      ? (asRecord.error as Record<string, unknown>)
+      : undefined;
+
+  const source = nestedError ?? asRecord;
+  const message =
+    (typeof source.message === "string" && source.message.trim()) ||
+    (typeof asRecord.detail === "string" && asRecord.detail.trim()) ||
+    fallbackMessage;
+
+  return {
+    code:
+      (typeof source.code === "string" && source.code.trim()) ||
+      "upstream_unavailable",
+    message,
+    details: typeof source.details === "string" ? source.details : undefined,
+    request_id:
+      (typeof source.request_id === "string" && source.request_id) ||
+      (typeof asRecord.request_id === "string" && asRecord.request_id) ||
+      undefined,
+  };
+};
+
+const toThrownStreamError = (
+  envelope: ApiErrorEnvelope,
+  status?: number,
+): Error & { data: Record<string, unknown>; status?: number } => {
+  const err = new Error(envelope.message) as Error & {
+    data: Record<string, unknown>;
+    status?: number;
+  };
+  err.data = {
+    error: envelope,
+    code: envelope.code,
+    message: envelope.message,
+    detail: envelope.message,
+    request_id: envelope.request_id,
+  };
+  if (status) {
+    err.status = status;
+  }
+  return err;
 };
 
 type UseStreamReturn = {
@@ -101,7 +201,17 @@ export function useStream(): UseStreamReturn {
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          let payload: unknown = null;
+          try {
+            payload = await response.json();
+          } catch {
+            payload = null;
+          }
+          const envelope = toApiErrorEnvelope(
+            payload,
+            `Request failed with status ${response.status}`,
+          );
+          throw toThrownStreamError(envelope, response.status);
         }
 
         const contentType = response.headers.get("content-type") ?? "";
@@ -130,10 +240,24 @@ export function useStream(): UseStreamReturn {
                 const jsonStr = trimmed.slice(6);
                 try {
                   const parsed: StreamChunk = JSON.parse(jsonStr);
-                  if (parsed.citations || parsed.chunks) {
+                  if (parsed.error) {
+                    setIsLoading(false);
+                    const envelope = toApiErrorEnvelope(parsed.error);
+                    setError(envelope.message);
+                    throw toThrownStreamError(envelope);
+                  }
+                  const hasUi = isValidUiPayload(parsed.ui);
+                  if (
+                    parsed.citations ||
+                    parsed.chunks ||
+                    hasUi ||
+                    parsed.request_id
+                  ) {
                     onMeta?.({
                       citations: parsed.citations,
                       chunks: parsed.chunks,
+                      ui: hasUi ? parsed.ui : undefined,
+                      request_id: parsed.request_id,
                     });
                   }
                   if (parsed.done) {
@@ -145,7 +269,13 @@ export function useStream(): UseStreamReturn {
                     setData(accumulated);
                     onChunk?.(parsed.content);
                   }
-                } catch {
+                } catch (parseErr) {
+                  if (
+                    parseErr instanceof Error &&
+                    typeof (parseErr as { data?: unknown }).data === "object"
+                  ) {
+                    throw parseErr;
+                  }
                   // skip malformed JSON
                 }
               }
@@ -162,16 +292,21 @@ export function useStream(): UseStreamReturn {
             onMeta?.({
               citations: json.citations,
               chunks: json.chunks,
+              ui: isValidUiPayload(json.ui) ? json.ui : undefined,
+              request_id: json.request_id,
             });
           }
           setIsLoading(false);
         }
       } catch (err) {
         if (err instanceof DOMException && err.name === "AbortError") {
+          setIsLoading(false);
           return;
         }
-        setError(err instanceof Error ? err.message : "Streaming failed");
+        const envelope = toApiErrorEnvelope(err);
+        setError(envelope.message);
         setIsLoading(false);
+        throw toThrownStreamError(envelope);
       }
     },
     [],

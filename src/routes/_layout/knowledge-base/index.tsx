@@ -156,6 +156,7 @@ function RouteComponent() {
               <Link
                 to="/knowledge-base/$kbId"
                 params={{ kbId: kb.rag_id }}
+                search={{ q: undefined }}
                 className="block"
               >
                 <Card className="border border-[#ccc3d4] dark:border-[#4a4452] hover:border-[#340075] dark:hover:border-[#6c40d6] transition-all bg-white dark:bg-[#16141a] rounded-xl shadow-none p-2 h-full flex flex-col justify-between">

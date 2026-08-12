@@ -6,14 +6,6 @@ import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn, humanReadableSize } from "@/lib/utils";
-import { FileAttachment } from "..";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -21,15 +13,19 @@ import {
   AlertDialogDescription,
   AlertDialogHeader,
 } from "@/components/ui/alert-dialog";
-import { Model } from "@/lib/types";
 import axios from "@/lib/axios";
+
+type FileAttachment = {
+  filename: string;
+  id: number;
+  filesize: number;
+  upload_timestamp: string;
+};
 
 type IChatInput = {
   session_id?: string;
   query: string;
   setQuery: Dispatch<SetStateAction<string>>;
-  model?: string;
-  setModel?: Dispatch<SetStateAction<Model>>;
   attachments?: FileAttachment[];
   setAttachments?: Dispatch<SetStateAction<FileAttachment[]>>;
   className?: string;
@@ -42,8 +38,6 @@ export const ChatInput: React.FC<IChatInput> = ({
   session_id,
   query = "",
   setQuery,
-  model = "gpt-4o-mini",
-  setModel,
   attachments = [],
   onUpload,
   className = "",
@@ -181,20 +175,7 @@ export const ChatInput: React.FC<IChatInput> = ({
               </Tooltip>
             )} */}
 
-            {setModel && (
-              <Select
-                value={model}
-                onValueChange={(value) => setModel(value as Model)}
-              >
-                <SelectTrigger className="h-8 w-fit rounded-full border-[#d8d2e0] bg-transparent text-[11px] text-[#5d5685] dark:border-[#4a4452] dark:text-[#c1b8dd]">
-                  <SelectValue placeholder="Select a model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="gpt-4o">GPT 4o</SelectItem>
-                  <SelectItem value="gpt-4o-mini">GPT 4o Mini</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
+            {/* Model selection is fixed server-side (gpt-4o-mini); no chooser is shown. */}
             <Button
               type="button"
               className="h-9 rounded-full bg-transparent px-3 text-[#5d5685] shadow-none hover:bg-[#f4f0ff] hover:text-[#3f3770] dark:text-[#d2c9ef] dark:hover:bg-[#292334]"

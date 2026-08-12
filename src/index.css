@@ -279,6 +279,16 @@ samp {
 
   /* Base styles for code elements */
   .markdown-renderer pre,
+  .markdown-renderer pre[class*="language-"] {
+    @apply bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50 p-4 rounded-xl shadow-inner overflow-auto;
+    font-family: var(--font-mono);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
   .markdown-renderer code,
   .markdown-renderer pre code,
   .markdown-renderer pre span,
@@ -292,9 +302,7 @@ samp {
   }
 
   .inline-code {
-    background-color: #f3f4f6;
-    padding: 0.125rem 0.25rem;
-    border-radius: 0.25rem;
+    @apply bg-zinc-200/60 dark:bg-zinc-800 text-[#340075] dark:text-zinc-100 px-1.5 py-0.5 rounded-md border border-zinc-300/40 dark:border-zinc-700/60;
     font-family: var(--font-mono);
     word-wrap: break-word;
     overflow-wrap: break-word;

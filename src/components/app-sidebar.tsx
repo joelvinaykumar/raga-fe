@@ -50,19 +50,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="border-b border-[#e7e5e4]/60 dark:border-[#2d2a2e]/60 px-6 py-5">
         <SidebarMenu>
           <SidebarMenuItem>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center bg-[#340075] dark:bg-[#6c40d6] text-[#ffffff] shadow-sm rounded-lg">
-                <span className="font-serif text-2xl font-bold">R</span>
+            <Link to="/dashboard">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center bg-[#340075] dark:bg-[#6c40d6] text-[#ffffff] shadow-sm rounded-lg">
+                  <span className="font-serif text-2xl font-bold">R</span>
+                </div>
+                <div className="grid flex-1 text-left">
+                  <span className="font-serif text-lg font-bold leading-none text-[#1e1b19] dark:text-[#f4ece8]">
+                    RAGA
+                  </span>
+                  <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#7b7483] dark:text-[#9c95a6] mt-1.5 leading-none">
+                    FREE PLAN
+                  </span>
+                </div>
               </div>
-              <div className="grid flex-1 text-left">
-                <span className="font-serif text-lg font-bold leading-none text-[#1e1b19] dark:text-[#f4ece8]">
-                  RAGA
-                </span>
-                <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#7b7483] dark:text-[#9c95a6] mt-1.5 leading-none">
-                  FREE PLAN
-                </span>
-              </div>
-            </div>
+            </Link>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
@@ -133,6 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                           <Link
                             to="/knowledge-base/$kbId"
                             params={{ kbId: kb.rag_id }}
+                            search={{ q: undefined }}
                             className="group block w-full pr-6"
                           >
                             <div className="flex flex-col min-w-0">

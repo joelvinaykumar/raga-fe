@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
+import { BACKEND_MODEL_OPTIONS, DEFAULT_MODEL, type Model } from "@/lib/types";
 import type { RagInfo } from "../-lib/types";
 
 /**
@@ -9,7 +10,7 @@ import type { RagInfo } from "../-lib/types";
  * screen that needs to read/edit a knowledge base's query configuration.
  */
 export function useKnowledgeBaseConfig(kbId: string) {
-  const [llmModel, setLlmModel] = useState<string>("gpt-4o-mini");
+  const [llmModel, setLlmModel] = useState<Model>(DEFAULT_MODEL);
   const [topK, setTopK] = useState<number>(8);
   const [embeddingModel, setEmbeddingModel] = useState<string>(
     "text-embedding-3-large",
@@ -17,38 +18,50 @@ export function useKnowledgeBaseConfig(kbId: string) {
   const [savingConfig, setSavingConfig] = useState(false);
 
   /** Hydrate config from localStorage overrides, falling back to RAG metadata. */
-  const hydrate = (ragData: RagInfo) => {
-    const cachedModel = localStorage.getItem(`nexus_model_${kbId}`);
-    const cachedTopK = localStorage.getItem(`nexus_topk_${kbId}`);
-    const cachedEmb = localStorage.getItem(`nexus_emb_${kbId}`);
+  const hydrate = useCallback(
+    (ragData: RagInfo) => {
+      const cachedModel = localStorage.getItem(`nexus_model_${kbId}`);
+      const cachedTopK = localStorage.getItem(`nexus_topk_${kbId}`);
+      const cachedEmb = localStorage.getItem(`nexus_emb_${kbId}`);
 
-    setLlmModel(cachedModel || "gpt-4o-mini");
-    setTopK(cachedTopK ? Number(cachedTopK) : ragData.top_k || 8);
-    setEmbeddingModel(
-      cachedEmb || ragData.embedding_model || "text-embedding-3-large",
-    );
-  };
+      const normalizedModel = BACKEND_MODEL_OPTIONS.includes(
+        cachedModel as Model,
+      )
+        ? (cachedModel as Model)
+        : DEFAULT_MODEL;
 
-  const saveConfig = async (ragInfo: RagInfo | null) => {
-    setSavingConfig(true);
-    try {
-      localStorage.setItem(`nexus_model_${kbId}`, llmModel);
-      localStorage.setItem(`nexus_topk_${kbId}`, String(topK));
-      localStorage.setItem(`nexus_emb_${kbId}`, embeddingModel);
+      setLlmModel(normalizedModel);
+      setTopK(cachedTopK ? Number(cachedTopK) : ragData.top_k || 8);
+      setEmbeddingModel(
+        cachedEmb || ragData.embedding_model || "text-embedding-3-large",
+      );
+    },
+    [kbId],
+  );
 
-      if (ragInfo) {
-        await axios.patch(`/rag/${kbId}`, {
-          name: ragInfo.name,
-          description: ragInfo.description,
-        });
+  const saveConfig = useCallback(
+    async (ragInfo: RagInfo | null) => {
+      setSavingConfig(true);
+      try {
+        localStorage.setItem(`nexus_model_${kbId}`, llmModel);
+        localStorage.setItem(`nexus_topk_${kbId}`, String(topK));
+        localStorage.setItem(`nexus_emb_${kbId}`, embeddingModel);
+
+        if (ragInfo) {
+          await axios.patch(`/rag/${kbId}`, {
+            name: ragInfo.name,
+            description: ragInfo.description,
+          });
+        }
+        toast.success("Configurations saved successfully.");
+      } catch {
+        toast.error("Failed to save some configurations.");
+      } finally {
+        setSavingConfig(false);
       }
-      toast.success("Configurations saved successfully.");
-    } catch {
-      toast.error("Failed to save some configurations.");
-    } finally {
-      setSavingConfig(false);
-    }
-  };
+    },
+    [embeddingModel, kbId, llmModel, topK],
+  );
 
   return {
     llmModel,

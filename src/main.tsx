@@ -49,25 +49,29 @@ if (!rootElement.innerHTML) {
         <QueryClientProvider client={queryClient}>
           <App />
           <Toaster
-            closeButton={false}
-            position="top-right"
+            closeButton
+            position="bottom-right"
+            richColors
             theme="system"
             toastOptions={{
-              className:
-                "font-serif border border-[#ccc3d4]/40 dark:border-[#2d2a2e]/60 text-[#1e1b19] dark:text-[#f4ece8] shadow-lg rounded-xl pointer-events-auto",
-              descriptionClassName:
-                "font-sans text-xs text-[#7b7483] dark:text-[#9c95a6]",
-              style: {
-                background: "hsl(var(--popover))",
-                backgroundColor: "hsl(var(--popover))",
-                color: "hsl(var(--popover-foreground))",
-                opacity: 1,
-              },
-              actionButtonStyle: {
-                backgroundColor: "#340075",
-                color: "#ffffff",
-                fontFamily: "var(--font-sans)",
-                borderRadius: "8px",
+              classNames: {
+                toast:
+                  "group toast font-sans rounded-xl border p-4 shadow-xl flex gap-3 pointer-events-auto backdrop-blur-md transition-all duration-300",
+                title: "font-serif text-sm font-semibold tracking-tight",
+                description:
+                  "font-sans text-xs text-muted-foreground leading-normal",
+                actionButton:
+                  "font-sans text-xs font-semibold rounded-lg bg-[#340075] text-white hover:bg-[#200050] transition-colors px-3 py-1.5",
+                cancelButton:
+                  "font-sans text-xs font-semibold rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 transition-colors px-3 py-1.5",
+                default: "bg-background/95 border-border text-foreground",
+                success:
+                  "!bg-emerald-50/95 dark:!bg-emerald-950/30 !border-emerald-500/30 !text-emerald-900 dark:!text-emerald-300",
+                error:
+                  "!bg-rose-50/95 dark:!bg-rose-950/30 !border-rose-500/30 !text-rose-900 dark:!text-rose-300",
+                warning:
+                  "!bg-amber-50/95 dark:!bg-amber-950/30 !border-amber-500/30 !text-amber-900 dark:!text-amber-300",
+                info: "!bg-sky-50/95 dark:!bg-sky-950/30 !border-sky-500/30 !text-sky-900 dark:!text-sky-300",
               },
             }}
           />

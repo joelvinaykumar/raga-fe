@@ -1,6 +1,6 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { MessageBubble } from "../../../chat/-components/message-bubble";
+import { MessageBubble } from "./message-bubble";
 import type { Message, PromptSuggestionCard } from "../-lib/types";
 
 interface ChatMessagesProps {

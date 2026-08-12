@@ -6,7 +6,16 @@ export const Route = createFileRoute("/auth/callback")({
     const code = (search as any).code;
 
     if (code) {
-      await supabase.auth.exchangeCodeForSession(code);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+      if (error) {
+        console.error("OAuth callback exchange failed => ", error);
+        throw redirect({ to: "/login" });
+      }
+
+      if (data.session) {
+        throw redirect({ to: "/" });
+      }
     }
 
     const {

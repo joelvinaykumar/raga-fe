@@ -14,11 +14,10 @@ import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as LayoutKnowledgeBaseIndexRouteImport } from './routes/_layout/knowledge-base/index'
-import { Route as LayoutChatIndexRouteImport } from './routes/_layout/chat/index'
+import { Route as LayoutDashboardIndexRouteImport } from './routes/_layout/dashboard/index'
 import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account/index'
 import { Route as LayoutKnowledgeBaseNewRouteImport } from './routes/_layout/knowledge-base/new'
 import { Route as LayoutKnowledgeBaseKbIdIndexRouteImport } from './routes/_layout/knowledge-base/$kbId/index'
-import { Route as LayoutChatSessionIdIndexRouteImport } from './routes/_layout/chat/$sessionId/index'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -45,9 +44,9 @@ const LayoutKnowledgeBaseIndexRoute =
     path: '/knowledge-base/',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutChatIndexRoute = LayoutChatIndexRouteImport.update({
-  id: '/chat/',
-  path: '/chat/',
+const LayoutDashboardIndexRoute = LayoutDashboardIndexRouteImport.update({
+  id: '/dashboard/',
+  path: '/dashboard/',
   getParentRoute: () => LayoutRoute,
 } as any)
 const LayoutAccountIndexRoute = LayoutAccountIndexRouteImport.update({
@@ -66,12 +65,6 @@ const LayoutKnowledgeBaseKbIdIndexRoute =
     path: '/knowledge-base/$kbId/',
     getParentRoute: () => LayoutRoute,
   } as any)
-const LayoutChatSessionIdIndexRoute =
-  LayoutChatSessionIdIndexRouteImport.update({
-    id: '/chat/$sessionId/',
-    path: '/chat/$sessionId/',
-    getParentRoute: () => LayoutRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,9 +72,8 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
-  '/chat': typeof LayoutChatIndexRoute
+  '/dashboard': typeof LayoutDashboardIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
-  '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
   '/knowledge-base/$kbId': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRoutesByTo {
@@ -90,9 +82,8 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
-  '/chat': typeof LayoutChatIndexRoute
+  '/dashboard': typeof LayoutDashboardIndexRoute
   '/knowledge-base': typeof LayoutKnowledgeBaseIndexRoute
-  '/chat/$sessionId': typeof LayoutChatSessionIdIndexRoute
   '/knowledge-base/$kbId': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRoutesById {
@@ -103,9 +94,8 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/_layout/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/_layout/account/': typeof LayoutAccountIndexRoute
-  '/_layout/chat/': typeof LayoutChatIndexRoute
+  '/_layout/dashboard/': typeof LayoutDashboardIndexRoute
   '/_layout/knowledge-base/': typeof LayoutKnowledgeBaseIndexRoute
-  '/_layout/chat/$sessionId/': typeof LayoutChatSessionIdIndexRoute
   '/_layout/knowledge-base/$kbId/': typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 export interface FileRouteTypes {
@@ -116,9 +106,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/knowledge-base/new'
     | '/account'
-    | '/chat'
+    | '/dashboard'
     | '/knowledge-base'
-    | '/chat/$sessionId'
     | '/knowledge-base/$kbId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -127,9 +116,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/knowledge-base/new'
     | '/account'
-    | '/chat'
+    | '/dashboard'
     | '/knowledge-base'
-    | '/chat/$sessionId'
     | '/knowledge-base/$kbId'
   id:
     | '__root__'
@@ -139,9 +127,8 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/_layout/knowledge-base/new'
     | '/_layout/account/'
-    | '/_layout/chat/'
+    | '/_layout/dashboard/'
     | '/_layout/knowledge-base/'
-    | '/_layout/chat/$sessionId/'
     | '/_layout/knowledge-base/$kbId/'
   fileRoutesById: FileRoutesById
 }
@@ -189,11 +176,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutKnowledgeBaseIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/chat/': {
-      id: '/_layout/chat/'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof LayoutChatIndexRouteImport
+    '/_layout/dashboard/': {
+      id: '/_layout/dashboard/'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof LayoutDashboardIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
     '/_layout/account/': {
@@ -217,31 +204,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutKnowledgeBaseKbIdIndexRouteImport
       parentRoute: typeof LayoutRoute
     }
-    '/_layout/chat/$sessionId/': {
-      id: '/_layout/chat/$sessionId/'
-      path: '/chat/$sessionId'
-      fullPath: '/chat/$sessionId'
-      preLoaderRoute: typeof LayoutChatSessionIdIndexRouteImport
-      parentRoute: typeof LayoutRoute
-    }
   }
 }
 
 interface LayoutRouteChildren {
   LayoutKnowledgeBaseNewRoute: typeof LayoutKnowledgeBaseNewRoute
   LayoutAccountIndexRoute: typeof LayoutAccountIndexRoute
-  LayoutChatIndexRoute: typeof LayoutChatIndexRoute
+  LayoutDashboardIndexRoute: typeof LayoutDashboardIndexRoute
   LayoutKnowledgeBaseIndexRoute: typeof LayoutKnowledgeBaseIndexRoute
-  LayoutChatSessionIdIndexRoute: typeof LayoutChatSessionIdIndexRoute
   LayoutKnowledgeBaseKbIdIndexRoute: typeof LayoutKnowledgeBaseKbIdIndexRoute
 }
 
 const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutKnowledgeBaseNewRoute: LayoutKnowledgeBaseNewRoute,
   LayoutAccountIndexRoute: LayoutAccountIndexRoute,
-  LayoutChatIndexRoute: LayoutChatIndexRoute,
+  LayoutDashboardIndexRoute: LayoutDashboardIndexRoute,
   LayoutKnowledgeBaseIndexRoute: LayoutKnowledgeBaseIndexRoute,
-  LayoutChatSessionIdIndexRoute: LayoutChatSessionIdIndexRoute,
   LayoutKnowledgeBaseKbIdIndexRoute: LayoutKnowledgeBaseKbIdIndexRoute,
 }
 
