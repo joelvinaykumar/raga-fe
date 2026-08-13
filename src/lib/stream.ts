@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { BASE_URL } from "./constants";
 import { supabase } from "@/lib/database";
+import { toast } from "sonner";
 
 type StreamChunk = {
   content?: string;
@@ -80,6 +81,43 @@ type StreamMeta = {
 
 const FALLBACK_STREAM_ERROR =
   "The LLM service is currently unavailable. Please try again later.";
+
+// Avoid duplicate parallel signouts and reload loops for unauthorized stream requests.
+let isSigningOutFromStream = false;
+
+const logoutOnUnauthorized = async () => {
+  if (isSigningOutFromStream) return;
+
+  isSigningOutFromStream = true;
+
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-")) {
+        localStorage.removeItem(key);
+      }
+    });
+    localStorage.removeItem("raga-home-store");
+  } catch (storageError) {
+    console.error(
+      "Failed to clear storage on 401 stream response:",
+      storageError,
+    );
+  }
+
+  toast.error("Session expired. Please sign in again.");
+
+  supabase.auth
+    .signOut()
+    .catch((signOutError) => {
+      console.error("Sign out error on 401 stream response:", signOutError);
+    })
+    .finally(() => {
+      setTimeout(() => {
+        isSigningOutFromStream = false;
+        window.location.reload();
+      }, 1200);
+    });
+};
 
 const isValidUiPayload = (value: unknown): value is GenerativeUiPayload => {
   if (!value || typeof value !== "object") return false;
@@ -201,6 +239,10 @@ export function useStream(): UseStreamReturn {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            await logoutOnUnauthorized();
+          }
+
           let payload: unknown = null;
           try {
             payload = await response.json();
@@ -303,6 +345,16 @@ export function useStream(): UseStreamReturn {
           setIsLoading(false);
           return;
         }
+
+        const status =
+          err && typeof err === "object" && "status" in err
+            ? (err as { status?: number }).status
+            : undefined;
+
+        if (status === 401) {
+          await logoutOnUnauthorized();
+        }
+
         const envelope = toApiErrorEnvelope(err);
         setError(envelope.message);
         setIsLoading(false);

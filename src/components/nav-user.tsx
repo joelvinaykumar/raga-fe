@@ -3,6 +3,7 @@
 import {
   BadgeCheck,
   ChevronsUpDown,
+  Github,
   LogOut,
   Monitor,
   Moon,
@@ -100,6 +101,16 @@ export function NavUser() {
                   Account
                 </DropdownMenuItem>
               </Link>
+              <DropdownMenuItem asChild>
+                <a
+                  href="https://github.com/joelvinaykumar/raga-fe"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Github />
+                  Github Repository
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <ToggleGroup
                 type="single"

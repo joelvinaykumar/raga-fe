@@ -11,7 +11,13 @@ import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // Create a new router instance
 const router = createRouter({ routeTree, context: { auth: undefined! } });
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+    },
+  },
+});
 
 // Register the router instance for type safety
 declare module "@tanstack/react-router" {
