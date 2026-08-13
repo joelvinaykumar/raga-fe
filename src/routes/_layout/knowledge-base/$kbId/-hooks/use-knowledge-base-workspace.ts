@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "@/lib/axios";
 import type { PromptSuggestionCard, RagInfo } from "../-lib/types";
 import {
@@ -30,6 +31,7 @@ export function useKnowledgeBaseWorkspace(
   options: KnowledgeBaseWorkspaceOptions = {},
 ) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { initialQuery, onInitialQueryExecuted } = options;
 
   const [loadingData, setLoadingData] = useState(true);
@@ -248,6 +250,11 @@ export function useKnowledgeBaseWorkspace(
           : prev,
       );
 
+      // Invalidate active knowledge bases query to sync sidebar changes immediately
+      await queryClient.invalidateQueries({
+        queryKey: ["list-knowledge-bases"],
+      });
+
       toast.success("Knowledge base updated successfully.");
       setIsEditDialogOpen(false);
     } catch {
@@ -261,6 +268,12 @@ export function useKnowledgeBaseWorkspace(
     setIsDeletingKnowledgebase(true);
     try {
       await axios.delete(`/rag/${kbId}`);
+
+      // Invalidate active knowledge bases query to sync sidebar deletion immediately
+      await queryClient.invalidateQueries({
+        queryKey: ["list-knowledge-bases"],
+      });
+
       toast.success("Knowledge base deleted successfully.");
       setIsDeleteDialogOpen(false);
       navigate({ to: "/knowledge-base" });

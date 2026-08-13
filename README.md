@@ -46,24 +46,101 @@ The frontend is a modern **Vite + React + TypeScript** SPA backed by a **FastAPI
 
 ## Architecture
 
+### High-Level Diagram
+
 ```mermaid
 flowchart LR
-    User[User] --> FE[React SPA / Vercel]
-    FE -->|Supabase Auth + Bearer token| Supa[(Supabase)]
-    FE -->|REST via Axios| API[FastAPI Backend]
-    FE -->|SSE stream - POST /chat| API
-    API --> Docs[(Document Store / RAG)]
-    API --> LLM[LLM - GPT-4o / GPT-4o-mini]
-    LLM -->|streamed chunks| API
-    API -->|data: {content, done}| FE
-    FE -->|renders Markdown| User
+  subgraph Browser["Client | React SPA"]
+    A["Vite + React 18 + TS | src/main.tsx"]
+    B["TanStack Router | file-based routes"]
+    C["Protected App Shell | _layout.tsx"]
+    D["Dashboard | select KB + model + query"]
+    E["KB Workspace | /knowledge-base/:kbId"]
+    F["Hooks Orchestrator | useKnowledgeBaseWorkspace"]
+    G["Chat Session Hook | useChatSession"]
+    H["Config Hook"]
+    I["Files Hook"]
+    J["MCP Hook"]
+    K["TanStack Query | server-state cache"]
+    L["Auth Context + Zustand | auth/session flags"]
+    M["Axios Client | REST + interceptors"]
+    N["SSE Stream Client | /chat streaming"]
+
+    A --> B --> C
+    C --> D
+    C --> E
+    E --> F
+    F --> G
+    F --> H
+    F --> I
+    F --> J
+    F --> K
+    G --> N
+    F --> M
+    C --> L
+  end
+
+  subgraph Auth["Identity"]
+    S["Supabase Auth"]
+  end
+
+  subgraph BE["Backend | raga-be | FastAPI"]
+    P["REST APIs | /rag/*, /documents, /history, /me"]
+    Q["Chat API | POST /chat | SSE/JSON"]
+  end
+
+  subgraph Data["Data + Retrieval"]
+    R["SQLite metadata/state"]
+    T["Chroma vector store"]
+    U["LLM provider"]
+  end
+
+  L <--> S
+  M --> P
+  N --> Q
+  P --> R
+  P --> T
+  Q --> R
+  Q --> T
+  Q --> U
+```
+
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant FE as raga-fe
+  participant SB as Supabase
+  participant API as FastAPI
+  participant VS as Chroma
+  participant LLM as Model
+
+  U->>FE: Open app
+  FE->>SB: getSession()
+  SB-->>FE: session/token
+  FE->>API: GET /rag/all | Bearer token
+  API-->>FE: knowledge bases
+
+  U->>FE: Choose KB + model + prompt
+  FE->>API: GET /rag/:kbId + /documents + /chat-history/:sessionId
+  API-->>FE: workspace data
+
+  U->>FE: Submit question
+  FE->>API: POST /chat | kbId + sessionId + top_k + model
+  API->>VS: retrieve chunks
+  API->>LLM: generate grounded answer
+  API-->>FE: stream chunks + citations + ui meta
+  FE-->>U: live-rendered response
 ```
 
 Key entry points:
 
 - `src/main.tsx` — router + providers (auth, theme, query).
 - `src/routes/**` — file-based routes; `_layout.tsx` is a pathless, authenticated layout.
-- `src/routes/_layout/chat/$sessionId/index.tsx` — the chat session: history load, SSE stream, message state.
+- `src/routes/_layout/dashboard/index.tsx` — the dashboard for selecting knowledge base + model.
+- `src/routes/_layout/knowledge-base/$kbId/index.tsx` — workspace route with chat + config + files + MCP dialogs.
+- `src/routes/_layout/knowledge-base/$kbId/-hooks/use-knowledge-base-workspace.ts` — orchestration hook for workspace state.
 - `src/lib/stream.ts` — SSE client (raw `fetch`, parses `data: {content, done}` lines).
 - `src/lib/axios.ts` — authenticated Axios instance for the FastAPI REST endpoints.
 
@@ -121,17 +198,9 @@ Deploys as a static SPA on **Vercel**. `vercel.json` rewrites every path to `ind
 }
 ```
 
-## Known Issues
+## Known Bugs
 
-### 1. Initial chat jitter — duplicate first message (new chat)
-
-When starting a new chat, the first message is typed on `/chat` and handed to `/chat/{sessionId}` via `location.state.query`, where it is replayed by a mount effect in `src/routes/_layout/chat/$sessionId/index.tsx`.
-
-Because the app is wrapped in `<StrictMode>` (`src/main.tsx`), that mount effect **double-fires in development**, which can submit the first question twice. The result: duplicate prompt/reply pairs, with one reply stuck in a `loading: true` state forever (the second SSE `stream()` call aborts the first through `useStream`'s shared `AbortController`).
-
-**Current mitigation** — the file guards against this with an `initialQuerySubmittedRef` ref, a `cancelled` flag in the effect cleanup, and an early `if (isStreaming) return` in `onSubmit` (the Enter key still fires `onSubmit` even though the send button is disabled while loading). Do not remove these guards. The robust long-term fix is to make the initial-submit effect idempotent without relying on a ref.
-
-### 2. Chat streaming animation bug — flicker/jitter while streaming
+### 1. Chat streaming animation bug — flicker/jitter while streaming
 
 `message-bubble.tsx` re-mounts the Markdown node on every streamed chunk using a key that changes per chunk:
 
@@ -139,9 +208,33 @@ Because the app is wrapped in `<StrictMode>` (`src/main.tsx`), that mount effect
 key={msg.loading ? `s-${msg.content.length}` : "static"}
 ```
 
-Re-keying remounts the node and re-triggers the `.markdown-streaming` `fade-in` animation (defined in `src/index.css`) for **every token**. Combined with the per-chunk `flushSync` in `$sessionId/index.tsx`, each token causes a full synchronous re-render plus a CSS animation restart — producing visible flicker/jitter while the answer streams.
+Re-keying remounts the node and re-triggers the `.markdown-streaming` `fade-in` animation (defined in `src/index.css`) for **every token**. Combined with per-chunk `flushSync` updates in chat state handling, this can produce visible flicker/jitter while the answer streams.
 
-**Fix direction** — animate opacity via a CSS transition instead of a keyed remount, and/or batch chunk updates instead of flushing synchronously per chunk.
+**Fix direction** — animate opacity via CSS transition instead of keyed remounts, and/or batch chunk updates.
+
+### 2. Account page renders blank content
+
+The `/account` route mounts, but the page body can render empty when profile/user-backed data is unresolved or empty.
+
+**Fix direction** — add explicit loading/error/empty states around profile queries and avoid premature null returns.
+
+### 3. `top_k` limits are inconsistent across surfaces
+
+`top_k` constraints differ between:
+
+- new knowledge base form validation,
+- workspace config slider bounds,
+- backend clamp logic.
+
+This can let users choose a value in one place that is rejected or silently clamped elsewhere.
+
+**Fix direction** — define one shared cap and align frontend validation, UI controls, and backend enforcement.
+
+## Upcoming Features
+
+- **Team collaboration in RAG** — shared knowledge bases, role-based access, and collaborative workspace activity.
+- **Agentic RAG** — tool-using autonomous retrieval/action flows for multi-step tasks.
+- **Expanded file format support** — first-class ingestion for `.md`, `.docx`, and `.txt` files.
 
 ---
 

@@ -7,6 +7,7 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 
 import { NavUser } from "@/components/nav-user";
+import { BugsDialog } from "@/components/bugs-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -162,7 +163,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-[#e7e5e4]/60 dark:border-[#2d2a2e]/60 px-4 py-3 bg-[#f4ece8]/50 dark:bg-[#1c1a20]/50">
+      <SidebarFooter className="border-t border-[#e7e5e4]/60 dark:border-[#2d2a2e]/60 px-4 py-3 bg-[#f4ece8]/50 dark:bg-[#1c1a20]/50 flex flex-col gap-2">
+        <SidebarMenu>
+          <BugsDialog />
+        </SidebarMenu>
         <NavUser />
       </SidebarFooter>
     </Sidebar>

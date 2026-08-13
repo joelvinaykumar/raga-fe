@@ -52,6 +52,9 @@ const instance = axios.create({
   headers: { Accept: "application/json" },
 });
 
+// Avoid duplicate parallel signouts and infinite redirect/reload loops.
+let isSigningOut = false;
+
 instance.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const {
@@ -68,10 +71,57 @@ instance.interceptors.request.use(
 
 instance.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     const e: any = error?.response?.data;
     const status = error?.response?.status;
     const envelope = toApiErrorEnvelope(e, status);
+
+    if (status === 401) {
+      if (!isSigningOut) {
+        isSigningOut = true;
+
+        // Synchronously clear localStorage for both Supabase session and Zustand persist store.
+        // This guarantees that on reload, all authentication guards see a clean, logged-out state,
+        // eliminating any potential client-side infinite reload or API loop.
+        try {
+          Object.keys(localStorage).forEach((key) => {
+            if (key.startsWith("sb-")) {
+              localStorage.removeItem(key);
+            }
+          });
+          localStorage.removeItem("raga-home-store");
+        } catch (storageError) {
+          console.error(
+            "Failed to synchronously clear storage in interceptor:",
+            storageError,
+          );
+        }
+
+        toast.error("Session expired. Please sign in again.");
+
+        // Clean up the server session asynchronously. We schedule the reload regardless of success.
+        supabase.auth
+          .signOut()
+          .catch((signOutError) => {
+            console.error(
+              "Sign out error in response interceptor:",
+              signOutError,
+            );
+          })
+          .finally(() => {
+            setTimeout(() => {
+              isSigningOut = false; // Reset lock before reloading
+              window.location.reload();
+            }, 1200);
+          });
+      }
+
+      // Return a rejected promise for the current error so the caller can handle it or fail gracefully.
+      if (error.response) {
+        return Promise.reject(error.response);
+      }
+      return Promise.reject(error);
+    }
 
     switch (status) {
       case 400:
