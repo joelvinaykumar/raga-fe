@@ -31,53 +31,23 @@ interface BugItem {
 
 const KNOWN_BUGS: BugItem[] = [
   {
-    id: "BE-4",
-    title: "Remote MCP Connection Failure (Serverless / Vercel)",
+    id: "MCP-1",
+    title: "MCP Connection — Authentication Still Needs Work",
     description:
-      "The MCP server is rejected or times out under serverless platforms like Vercel. Serverless environments restrict persistent HTTP/SSE sessions, enforce strict execution limits, and block stateful tool lifecycles.",
+      "The MCP connection flow is buggy and not yet production-ready. Authentication for MCP clients — API-key provisioning/validation and scoped access — is incomplete, so tool connections can be rejected or behave inconsistently.",
     impact:
-      "Remote MCP tool servers fail to connect. Stateful deployments (e.g. Render/Railway) or local setups are required.",
+      "External MCP clients cannot reliably authenticate. API-key issuance/rotation, server-side header validation, and client error handling all need hardening before it can be relied on.",
     status: "investigating",
     type: "backend",
-  },
-  {
-    id: "FE-1",
-    title: "Chat Streaming Animation Jitter",
-    description:
-      "Every chunk update triggers the fade-in opacity animation in react-markdown renderer, resulting in flickering while loading real-time SSE streams.",
-    impact:
-      "Visual annoyance and minor text flicker during active generated replies.",
-    status: "investigating",
-    type: "frontend",
-  },
-  {
-    id: "FE-2",
-    title: "Account Page Empty Slate",
-    description:
-      "The /account endpoint mounts fully and is compile-safe, but returns flat empty column list on user query initialization.",
-    impact:
-      "User profile or limits do not render details, showing a blank column.",
-    status: "in-progress",
-    type: "frontend",
   },
   {
     id: "SHARED-1",
     title: "Inconsistent top_k Caps",
     description:
-      "Three separate validation limits are enforced: 10 on route create form, 20 on workspace slider, 30 on FastAPI resolver.",
+      "Three separate validation limits used to be enforced (10 on the create form, 20 on the workspace slider, 30 on the FastAPI resolver). Unified to a single 1–100 range shared across the create form, config slider, config-hook clamp, and both backend enforcement points.",
     impact:
-      "A top_k limit chosen in one dashboard surface can get clamped/rejected when requesting or saving.",
-    status: "planning",
-    type: "frontend",
-  },
-  {
-    id: "FE-3",
-    title: "StrictMode Enter Key Jitter",
-    description:
-      "Submit effects double-fire under developer StrictMode environments if loading states are bypassed, duplicating message streams.",
-    impact:
-      "Potential duplicate response bubbles with one stream left hanging in continuous loading.",
-    status: "planning",
+      "A top_k value chosen in one surface could previously be clamped or rejected elsewhere. Now consistent end-to-end.",
+    status: "fixed",
     type: "frontend",
   },
   {
@@ -138,7 +108,7 @@ export function BugsDialog() {
             variant="outline"
             className="gap-1 border-blue-500 bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 capitalize"
           >
-            <RefreshCw className="size-3 animate-spin" />
+            <RefreshCw className="size-3" />
             Fix Active
           </Badge>
         );
@@ -287,14 +257,25 @@ export function BugsDialog() {
             <Info className="size-3.5" />
             RAGA Environment v1.0.0
           </span>
-          <a
-            href="https://github.com/joelvinaykumar"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1 hover:text-purple-600 dark:hover:text-[#9c7beb] transition-colors"
-          >
-            GitHub Tracker <ExternalLink className="size-3" />
-          </a>
+          <div className="flex items-center gap-3">
+            <a
+              href="https://github.com/joelvinaykumar/raga-fe/issues/new?template=bug_report.md"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 rounded-md bg-purple-600 px-2.5 py-1 font-semibold text-white transition-colors hover:bg-purple-700 dark:bg-[#9c7beb] dark:text-[#121115] dark:hover:bg-[#8a67e0]"
+            >
+              <Bug className="size-3" />
+              Report bug
+            </a>
+            <a
+              href="https://github.com/joelvinaykumar/raga-fe/issues"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 hover:text-purple-600 dark:hover:text-[#9c7beb] transition-colors"
+            >
+              GitHub Tracker <ExternalLink className="size-3" />
+            </a>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

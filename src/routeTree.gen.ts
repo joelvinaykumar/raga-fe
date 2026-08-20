@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterAccountRouteImport } from './routes/register-account'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as LayoutAccountIndexRouteImport } from './routes/_layout/account
 import { Route as LayoutKnowledgeBaseNewRouteImport } from './routes/_layout/knowledge-base/new'
 import { Route as LayoutKnowledgeBaseKbIdIndexRouteImport } from './routes/_layout/knowledge-base/$kbId/index'
 
+const RegisterAccountRoute = RegisterAccountRouteImport.update({
+  id: '/register-account',
+  path: '/register-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -69,6 +75,7 @@ const LayoutKnowledgeBaseKbIdIndexRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register-account': typeof RegisterAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
@@ -79,6 +86,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/register-account': typeof RegisterAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/account': typeof LayoutAccountIndexRoute
@@ -91,6 +99,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
+  '/register-account': typeof RegisterAccountRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_layout/knowledge-base/new': typeof LayoutKnowledgeBaseNewRoute
   '/_layout/account/': typeof LayoutAccountIndexRoute
@@ -103,6 +112,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/register-account'
     | '/auth/callback'
     | '/knowledge-base/new'
     | '/account'
@@ -113,6 +123,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/register-account'
     | '/auth/callback'
     | '/knowledge-base/new'
     | '/account'
@@ -124,6 +135,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_layout'
     | '/login'
+    | '/register-account'
     | '/auth/callback'
     | '/_layout/knowledge-base/new'
     | '/_layout/account/'
@@ -136,11 +148,19 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LayoutRoute: typeof LayoutRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RegisterAccountRoute: typeof RegisterAccountRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register-account': {
+      id: '/register-account'
+      path: '/register-account'
+      fullPath: '/register-account'
+      preLoaderRoute: typeof RegisterAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -230,6 +250,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LayoutRoute: LayoutRouteWithChildren,
   LoginRoute: LoginRoute,
+  RegisterAccountRoute: RegisterAccountRoute,
   AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport

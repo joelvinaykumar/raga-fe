@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect } from "react";
-import { User } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 
 import axios from "@/lib/axios";
 import { supabase } from "@/lib/database";
@@ -8,7 +8,10 @@ import { useHomeStore } from "@/store";
 export interface AuthContext {
   isAuthenticated: boolean;
   login: (input: { email: string; password: string }) => Promise<void>;
-  signup: (input: { email: string; password: string }) => Promise<void>;
+  signup: (input: {
+    email: string;
+    password: string;
+  }) => Promise<{ session: Session | null; user: User | null }>;
   loginWithGoogle: () => Promise<void>;
   loginWithGithub: () => Promise<void>;
   logout: () => Promise<void>;
@@ -39,20 +42,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signup = async (input: { email: string; password: string }) => {
-    try {
-      const res = await supabase.auth.signUp(input);
-      if (res.data) {
-        setIsAuthenticated(!!res.data.session);
-        setCurrentUser(res.data.user);
-        window.location.href = "/";
-      }
+    const res = await supabase.auth.signUp(input);
 
-      if (res.error) {
-        console.error("Error signing up with password => ", res.error);
-      }
-    } catch (error) {
-      console.error("Error signing up with password => ", error);
+    if (res.error) {
+      console.error("Error signing up with password => ", res.error);
+      // Surface the failure to the caller so it can alert the user.
+      throw res.error;
     }
+
+    // When email confirmation is enabled, Supabase returns a user without a
+    // session. In that case the caller shows a "check your inbox" message
+    // instead of redirecting into the authenticated app.
+    if (res.data.session?.access_token) {
+      setIsAuthenticated(true);
+      setCurrentUser(res.data.user);
+      window.location.href = "/";
+    }
+
+    return res.data;
   };
 
   const loginWithGoogle = async () => {

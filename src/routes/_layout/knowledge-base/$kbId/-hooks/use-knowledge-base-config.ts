@@ -1,7 +1,13 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
-import { BACKEND_MODEL_OPTIONS, DEFAULT_MODEL, type Model } from "@/lib/types";
+import {
+  BACKEND_MODEL_OPTIONS,
+  DEFAULT_MODEL,
+  TOP_K_DEFAULT,
+  clampTopK,
+  type Model,
+} from "@/lib/types";
 import type { RagInfo } from "../-lib/types";
 
 /**
@@ -11,7 +17,7 @@ import type { RagInfo } from "../-lib/types";
  */
 export function useKnowledgeBaseConfig(kbId: string) {
   const [llmModel, setLlmModel] = useState<Model>(DEFAULT_MODEL);
-  const [topK, setTopK] = useState<number>(8);
+  const [topK, setTopK] = useState<number>(TOP_K_DEFAULT);
   const [embeddingModel, setEmbeddingModel] = useState<string>(
     "text-embedding-3-large",
   );
@@ -31,7 +37,11 @@ export function useKnowledgeBaseConfig(kbId: string) {
         : DEFAULT_MODEL;
 
       setLlmModel(normalizedModel);
-      setTopK(cachedTopK ? Number(cachedTopK) : ragData.top_k || 8);
+      setTopK(
+        clampTopK(
+          cachedTopK ? Number(cachedTopK) : ragData.top_k || TOP_K_DEFAULT,
+        ),
+      );
       setEmbeddingModel(
         cachedEmb || ragData.embedding_model || "text-embedding-3-large",
       );

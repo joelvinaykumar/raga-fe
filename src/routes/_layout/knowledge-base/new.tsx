@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "@/lib/axios";
+import { TOP_K_DEFAULT, TOP_K_MAX, TOP_K_MIN, describeTopK } from "@/lib/types";
 
 export const Route = createFileRoute("/_layout/knowledge-base/new")({
   component: CreateKnowledgeBasePage,
@@ -53,8 +54,8 @@ const createKnowledgeBaseSchema = z.object({
   top_k: z
     .number()
     .int({ message: "Top-K must be a whole number" })
-    .min(1, { message: "Top-K must be at least 1" })
-    .max(10, { message: "Top-K must be at most 10" }),
+    .min(TOP_K_MIN, { message: `Top-K must be at least ${TOP_K_MIN}` })
+    .max(TOP_K_MAX, { message: `Top-K must be at most ${TOP_K_MAX}` }),
   embedding_model: z.enum(["text-embedding-3-large", "text-embedding-ada-002"]),
 });
 
@@ -66,7 +67,7 @@ function CreateKnowledgeBasePage() {
     defaultValues: {
       name: "",
       description: "",
-      top_k: 8,
+      top_k: TOP_K_DEFAULT,
       embedding_model: "text-embedding-3-large",
     },
   });
@@ -194,13 +195,13 @@ function CreateKnowledgeBasePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className="text-xs uppercase tracking-[0.16em] text-[#5e5767] dark:text-[#b3acbf]">
-                          Top-K (1-10)
+                          Top-K ({TOP_K_MIN}-{TOP_K_MAX})
                         </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            min={1}
-                            max={10}
+                            min={TOP_K_MIN}
+                            max={TOP_K_MAX}
                             step={1}
                             className="h-11 rounded-xl border-[#d5cede] bg-white focus-visible:ring-[#5c43a9] dark:border-[#4a4452] dark:bg-[#1f1c26]"
                             value={field.value}
@@ -209,6 +210,12 @@ function CreateKnowledgeBasePage() {
                             }
                           />
                         </FormControl>
+                        <p className="text-[11px] leading-relaxed text-[#7b7483] dark:text-[#9c95a6]">
+                          <span className="font-semibold text-[#5e5767] dark:text-[#b3acbf]">
+                            {describeTopK(field.value).label}:
+                          </span>{" "}
+                          {describeTopK(field.value).hint}
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

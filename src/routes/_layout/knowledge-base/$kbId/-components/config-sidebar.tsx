@@ -8,7 +8,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { BACKEND_MODEL_OPTIONS, type Model } from "@/lib/types";
+import {
+  BACKEND_MODEL_OPTIONS,
+  TOP_K_MAX,
+  TOP_K_MIN,
+  describeTopK,
+  type Model,
+} from "@/lib/types";
 import { humanReadableSize } from "@/lib/utils";
 import { FileText, FolderOpen, Loader2, Sliders, X } from "lucide-react";
 import type { RagDocument } from "../-lib/types";
@@ -99,26 +105,30 @@ export function ConfigSidebar({
               Top-K Results
             </label>
             <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-muted border border-input rounded-md text-muted-foreground">
-              {topK}
+              {topK} · {describeTopK(topK).label}
             </span>
           </div>
 
           <div className="flex items-center gap-3 pt-1">
             <span className="font-mono text-[10px] text-muted-foreground">
-              1
+              {TOP_K_MIN}
             </span>
             <input
               type="range"
-              min="1"
-              max="20"
+              min={TOP_K_MIN}
+              max={TOP_K_MAX}
               value={topK}
               onChange={(e) => onTopKChange(Number(e.target.value))}
               className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
             />
             <span className="font-mono text-[10px] text-muted-foreground">
-              20
+              {TOP_K_MAX}
             </span>
           </div>
+
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            {describeTopK(topK).hint}
+          </p>
         </div>
 
         <div className="space-y-2">

@@ -200,35 +200,11 @@ Deploys as a static SPA on **Vercel**. `vercel.json` rewrites every path to `ind
 
 ## Known Bugs
 
-### 1. Chat streaming animation bug — flicker/jitter while streaming
+### MCP connection — authentication still needs work
 
-`message-bubble.tsx` re-mounts the Markdown node on every streamed chunk using a key that changes per chunk:
+The MCP connection flow is buggy and not yet production-ready. Authentication for MCP clients (API-key provisioning/validation and scoped access) is incomplete and needs further work before it can be relied on.
 
-```tsx
-key={msg.loading ? `s-${msg.content.length}` : "static"}
-```
-
-Re-keying remounts the node and re-triggers the `.markdown-streaming` `fade-in` animation (defined in `src/index.css`) for **every token**. Combined with per-chunk `flushSync` updates in chat state handling, this can produce visible flicker/jitter while the answer streams.
-
-**Fix direction** — animate opacity via CSS transition instead of keyed remounts, and/or batch chunk updates.
-
-### 2. Account page renders blank content
-
-The `/account` route mounts, but the page body can render empty when profile/user-backed data is unresolved or empty.
-
-**Fix direction** — add explicit loading/error/empty states around profile queries and avoid premature null returns.
-
-### 3. `top_k` limits are inconsistent across surfaces
-
-`top_k` constraints differ between:
-
-- new knowledge base form validation,
-- workspace config slider bounds,
-- backend clamp logic.
-
-This can let users choose a value in one place that is rejected or silently clamped elsewhere.
-
-**Fix direction** — define one shared cap and align frontend validation, UI controls, and backend enforcement.
+**Fix direction** — harden the MCP auth path: robust API-key issuance/rotation, consistent header validation on the server, and clear error handling on the client.
 
 ## Upcoming Features
 
