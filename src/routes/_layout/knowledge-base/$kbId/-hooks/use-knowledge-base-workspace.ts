@@ -79,81 +79,111 @@ export function useKnowledgeBaseWorkspace(
 
     let cancelled = false;
 
-    const loadWorkspace = async () => {
+    const loadWorkspace = () => {
       setIsHistoryLoading(true);
-      try {
-        if (cancelled) return;
+      setIsFilesLoading(true);
 
-        setIsFilesLoading(true);
-        const [ragRes, filesRes, historyRes] = await Promise.all([
-          axios.get(`/rag/${kbId}`),
-          axios.get(`/rag/${kbId}/documents`),
-          axios.get(`chat-history/${sessionId}`),
-        ]);
+      // Fire every request in parallel but handle each independently so the
+      // slowest (or a failing) call never blocks the others. The full-screen
+      // "Initializing" gate is released as soon as the RAG metadata — the only
+      // data the header/config actually need — arrives; files and history
+      // stream in afterwards under their own loading flags.
 
-        if (cancelled) return;
+      // 1) RAG metadata → releases the full-screen loader.
+      axios
+        .get(`/rag/${kbId}`)
+        .then((ragRes) => {
+          if (cancelled) return;
+          setRagInfo(ragRes.data);
+          hydrate(ragRes.data);
+        })
+        .catch(() => {
+          /* interceptor toasts; keep the workspace usable */
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingData(false);
+        });
 
-        setRagInfo(ragRes.data);
-        setFiles(filesRes.data);
-        hydrate(ragRes.data);
+      // 2) Indexed documents → independent, gated by isFilesLoading.
+      axios
+        .get(`/rag/${kbId}/documents`)
+        .then((filesRes) => {
+          if (!cancelled) setFiles(filesRes.data);
+        })
+        .catch(() => {
+          /* interceptor toasts */
+        })
+        .finally(() => {
+          if (!cancelled) setIsFilesLoading(false);
+        });
 
-        if (historyRes.data) {
-          setMessages(
-            historyRes.data.map((msg: any) => ({
-              role: msg.role || "user",
-              content: msg.content || "",
-              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-              loading: false,
-              citations: Array.isArray(msg.citations) ? msg.citations : [],
-              chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
-              ui:
-                msg.ui &&
-                typeof msg.ui === "object" &&
-                Array.isArray(msg.ui.blocks)
-                  ? msg.ui
-                  : undefined,
-            })),
-          );
-        }
+      // 3) Chat history → independent; drives prompt suggestions on empty.
+      axios
+        .get(`chat-history/${sessionId}`)
+        .then(async (historyRes) => {
+          if (cancelled) return;
 
-        const hasChatHistory =
-          Array.isArray(historyRes.data) && historyRes.data.length > 0;
-        const hasValidRagId = isValidRagId(kbId);
-
-        if (!hasChatHistory && hasValidRagId) {
-          try {
-            const promptsRes = await axios.get(
-              `/rag/${kbId}/prompts/suggestions`,
+          if (historyRes.data) {
+            setMessages(
+              historyRes.data.map((msg: any) => ({
+                role: msg.role || "user",
+                content: msg.content || "",
+                timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
+                loading: false,
+                citations: Array.isArray(msg.citations) ? msg.citations : [],
+                chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
+                ui:
+                  msg.ui &&
+                  typeof msg.ui === "object" &&
+                  Array.isArray(msg.ui.blocks)
+                    ? msg.ui
+                    : undefined,
+              })),
             );
-            const prompts = Array.isArray(promptsRes?.data?.prompts)
-              ? promptsRes.data.prompts.filter(
-                  (prompt: unknown): prompt is string =>
-                    typeof prompt === "string" && prompt.trim().length > 0,
-                )
-              : [];
+          }
 
-            setPromptSuggestions(
-              prompts.length > 0
-                ? toSuggestionCards(prompts)
-                : toSuggestionCards(FALLBACK_PROMPTS),
-            );
-          } catch {
+          const hasChatHistory =
+            Array.isArray(historyRes.data) && historyRes.data.length > 0;
+          const hasValidRagId = isValidRagId(kbId);
+
+          if (!hasChatHistory && hasValidRagId) {
+            try {
+              const promptsRes = await axios.get(
+                `/rag/${kbId}/prompts/suggestions`,
+              );
+              if (cancelled) return;
+              const prompts = Array.isArray(promptsRes?.data?.prompts)
+                ? promptsRes.data.prompts.filter(
+                    (prompt: unknown): prompt is string =>
+                      typeof prompt === "string" && prompt.trim().length > 0,
+                  )
+                : [];
+
+              setPromptSuggestions(
+                prompts.length > 0
+                  ? toSuggestionCards(prompts)
+                  : toSuggestionCards(FALLBACK_PROMPTS),
+              );
+            } catch {
+              if (!cancelled)
+                setPromptSuggestions(toSuggestionCards(FALLBACK_PROMPTS));
+            }
+          } else if (!hasValidRagId) {
             setPromptSuggestions(toSuggestionCards(FALLBACK_PROMPTS));
           }
-        } else if (!hasValidRagId) {
-          setPromptSuggestions(toSuggestionCards(FALLBACK_PROMPTS));
-        }
-      } finally {
-        if (!cancelled) {
-          setIsHistoryLoading(false);
-          setIsFilesLoading(false);
-          setLoadingData(false);
-          setTimeout(
-            () => scrollRef.current?.scrollIntoView({ behavior: "smooth" }),
-            100,
-          );
-        }
-      }
+        })
+        .catch(() => {
+          /* interceptor toasts */
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsHistoryLoading(false);
+            setTimeout(
+              () => scrollRef.current?.scrollIntoView({ behavior: "smooth" }),
+              100,
+            );
+          }
+        });
     };
 
     loadWorkspace();
