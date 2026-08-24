@@ -6,6 +6,7 @@ import { ChatMessages } from "./-components/chat-messages";
 import { ChatInput } from "./-components/chat-input";
 import { ConfigSidebar } from "./-components/config-sidebar";
 import { McpConnectionDialog } from "./-components/mcp-connection-dialog";
+import { RagEvaluationDialog } from "./-components/rag-evaluation-dialog";
 import { EditKnowledgeBaseDialog } from "./-components/edit-knowledge-base-dialog";
 import { DeleteKnowledgeBaseAlertDialog } from "./-components/delete-knowledge-base-alert-dialog";
 import { DeleteFileAlertDialog } from "./-components/delete-file-alert-dialog";
@@ -54,6 +55,7 @@ function KnowledgeBaseDetail() {
     config,
     filesApi,
     mcp,
+    evaluation,
     saveConfig,
     editKb,
   } = useKnowledgeBaseWorkspace(kbId, {
@@ -137,6 +139,8 @@ function KnowledgeBaseDetail() {
         onEmbeddingModelChange={config.setEmbeddingModel}
         savingConfig={config.savingConfig}
         onSaveConfig={saveConfig}
+        isEvaluating={evaluation.isEvaluating}
+        onEvaluate={evaluation.startEvaluation}
         files={filesApi.files}
         isUploading={filesApi.isUploading}
         isFilesLoading={filesApi.isFilesLoading}
@@ -182,6 +186,12 @@ function KnowledgeBaseDetail() {
         mcpInstructionMarkdown={mcp.mcpInstructionMarkdown}
         copiedField={mcp.mcpCopiedField}
         onCopy={mcp.copyValue}
+      />
+
+      <RagEvaluationDialog
+        open={evaluation.isDialogOpen}
+        onOpenChange={evaluation.setIsDialogOpen}
+        evaluation={evaluation.evaluation}
       />
     </div>
   );

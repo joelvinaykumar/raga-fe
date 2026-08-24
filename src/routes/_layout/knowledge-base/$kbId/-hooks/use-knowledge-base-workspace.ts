@@ -13,6 +13,7 @@ import { useChatSession } from "./use-chat-session";
 import { useKnowledgeBaseConfig } from "./use-knowledge-base-config";
 import { useKnowledgeBaseFiles } from "./use-knowledge-base-files";
 import { useMcpConnection } from "./use-mcp-connection";
+import { useRagEvaluation } from "./use-rag-evaluation";
 
 type KnowledgeBaseWorkspaceOptions = {
   initialQuery?: string;
@@ -51,6 +52,7 @@ export function useKnowledgeBaseWorkspace(
   const config = useKnowledgeBaseConfig(kbId);
   const filesApi = useKnowledgeBaseFiles(kbId);
   const mcp = useMcpConnection(kbId);
+  const evaluation = useRagEvaluation(kbId);
 
   // Keep the latest chat params in a ref so the chat submit handler always
   // reads the current top-k/model without re-creating the callback.
@@ -325,6 +327,7 @@ export function useKnowledgeBaseWorkspace(
     config,
     filesApi,
     mcp,
+    evaluation,
     saveConfig,
     // edit / delete KB dialogs
     editKb: {

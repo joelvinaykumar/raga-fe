@@ -16,7 +16,7 @@ import {
   type Model,
 } from "@/lib/types";
 import { humanReadableSize } from "@/lib/utils";
-import { FileText, FolderOpen, Loader2, Sliders, X } from "lucide-react";
+import { FileText, FolderOpen, Gauge, Loader2, Sliders, X } from "lucide-react";
 import type { RagDocument } from "../-lib/types";
 
 interface ConfigSidebarProps {
@@ -29,6 +29,9 @@ interface ConfigSidebarProps {
   onEmbeddingModelChange: (value: string) => void;
   savingConfig: boolean;
   onSaveConfig: () => void;
+  // evaluation
+  isEvaluating: boolean;
+  onEvaluate: () => void;
   // files
   files: RagDocument[];
   isUploading: boolean;
@@ -48,6 +51,8 @@ export function ConfigSidebar({
   onEmbeddingModelChange,
   savingConfig,
   onSaveConfig,
+  isEvaluating,
+  onEvaluate,
   files,
   isUploading,
   isFilesLoading,
@@ -150,6 +155,25 @@ export function ConfigSidebar({
           </Select>
         </div>
       </div>
+
+      {/* Evaluate RAG quality */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => onEvaluate()}
+        disabled={isEvaluating}
+        className="w-full h-10 rounded-lg border-primary/40 bg-primary/5 text-primary font-sans text-xs font-semibold hover:bg-primary/10 transition"
+      >
+        {isEvaluating ? (
+          <>
+            <Loader2 className="size-4 animate-spin" /> Evaluating…
+          </>
+        ) : (
+          <>
+            <Gauge className="size-4" /> Evaluate RAG
+          </>
+        )}
+      </Button>
 
       <div className="border-t border-border my-2" />
 
