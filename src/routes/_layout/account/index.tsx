@@ -16,7 +16,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_layout/account/")({
@@ -32,6 +32,15 @@ function RouteComponent() {
   const [copiedField, setCopiedField] = useState<
     "key" | "url" | "config" | null
   >(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const profile = current_user?.user_metadata;
 
@@ -70,7 +79,10 @@ function RouteComponent() {
       await navigator.clipboard.writeText(value);
       setCopiedField(field);
       toast.success(`${label} copied to clipboard`);
-      setTimeout(() => setCopiedField(null), 2000);
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = setTimeout(() => setCopiedField(null), 2000);
     } catch (error) {
       console.error(`Failed to copy ${label} => `, error);
       toast.error(`Could not copy ${label}`);

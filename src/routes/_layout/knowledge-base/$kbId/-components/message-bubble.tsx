@@ -22,6 +22,59 @@ import { cn } from "@/lib/utils";
 import React from "react";
 import { motion } from "framer-motion";
 
+/**
+ * Compute character ranges where inserting inline HTML would corrupt the
+ * markdown block structure: GFM tables and fenced code blocks. Citation markers
+ * that would land inside one of these ranges must be relocated to just after
+ * it, otherwise the table/code fence stops parsing and renders as raw text.
+ */
+function getProtectedRanges(text: string): Array<[number, number]> {
+  const ranges: Array<[number, number]> = [];
+
+  // Fenced code blocks (``` or ~~~ ... closing fence).
+  const fenceRe = /(^|\n)(```|~~~)[\s\S]*?(\n\2|$)/g;
+  let match: RegExpExecArray | null;
+  while ((match = fenceRe.exec(text)) !== null) {
+    ranges.push([match.index, match.index + match[0].length]);
+  }
+
+  // GFM tables: a run of 2+ consecutive lines that each contain a pipe. This
+  // reliably captures the header + delimiter + body rows without protecting
+  // stray single-pipe prose lines.
+  let offset = 0;
+  const lines = text.split("\n");
+  let runStart = -1;
+  let runStartOffset = 0;
+  let runLineCount = 0;
+
+  const flush = (endOffset: number) => {
+    if (runLineCount >= 2 && runStart !== -1) {
+      ranges.push([runStartOffset, endOffset]);
+    }
+    runStart = -1;
+    runLineCount = 0;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const isTableRow = line.includes("|");
+    if (isTableRow) {
+      if (runStart === -1) {
+        runStart = i;
+        runStartOffset = offset;
+      }
+      runLineCount++;
+    } else {
+      // End of a table run just before this line.
+      flush(offset > 0 ? offset - 1 : offset);
+    }
+    offset += line.length + 1; // +1 for the split "\n"
+  }
+  flush(text.length);
+
+  return ranges;
+}
+
 export const MessageBubble: React.FC<{
   msg: {
     role: "user" | "assistant";
@@ -47,13 +100,29 @@ export const MessageBubble: React.FC<{
     }
 
     let text = msg.content;
-    const ordered = [...citations].sort(
-      (a, b) => (b.display_char ?? 0) - (a.display_char ?? 0),
-    );
 
-    for (const citation of ordered) {
+    // Ranges (tables / code fences) where inline HTML would break parsing.
+    const protectedRanges = getProtectedRanges(text);
+    const snap = (pos: number) => {
+      for (const [start, end] of protectedRanges) {
+        // Strictly inside a protected block → move to just after it so the
+        // table/code still parses and the citation trails the block.
+        if (pos > start && pos < end) return end;
+      }
+      return pos;
+    };
+
+    // Resolve each citation's final insertion position first (snapped out of
+    // protected blocks), then insert from the end so earlier splices don't
+    // shift later positions.
+    const resolved = citations.map((citation) => {
       const rawPos = citation.display_char ?? citation.end_char ?? text.length;
-      const pos = Math.min(Math.max(rawPos, 0), text.length);
+      const clamped = Math.min(Math.max(rawPos, 0), text.length);
+      return { citation, pos: snap(clamped) };
+    });
+    resolved.sort((a, b) => b.pos - a.pos);
+
+    for (const { citation, pos } of resolved) {
       const preview = String(citation.quote ?? citation.filename ?? "")
         .replace(/"/g, "&quot;")
         .replace(/</g, "&lt;")

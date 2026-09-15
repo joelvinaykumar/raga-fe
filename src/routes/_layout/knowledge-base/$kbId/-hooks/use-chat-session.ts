@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import axios from "@/lib/axios";
 import { useStream } from "@/lib/stream";
 import type { Model } from "@/lib/types";
-import type { Message } from "../-lib/types";
+import { capMessages, compactSourceChunks, type Message } from "../-lib/types";
 
 type ChatParams = { topK: number; model: Model };
 
@@ -22,6 +22,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { stream: streamChat } = useStream();
 
   // Initialize or restore the persistent session id for this workspace.
@@ -33,6 +34,14 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
     }
     setSessionId(activeSessionId);
   }, [kbId]);
+
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const scrollToBottom = (behavior: ScrollBehavior = "smooth") => {
     scrollRef.current?.scrollIntoView({ behavior });
@@ -63,25 +72,30 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
     const { topK, model: llmModel } = getChatParams();
 
     setQuery("");
-    setMessages((prev) => [
-      ...prev,
-      {
-        role: "user",
-        content: text,
-        timestamp: new Date(),
-        loading: false,
-      },
-      {
-        role: "assistant",
-        content: "",
-        timestamp: new Date(),
-        loading: true,
-        citations: [],
-        chunks: [],
-        ui: undefined,
-      },
-    ]);
-    setTimeout(() => scrollToBottom(), 80);
+    setMessages((prev) =>
+      capMessages([
+        ...prev,
+        {
+          role: "user",
+          content: text,
+          timestamp: new Date(),
+          loading: false,
+        },
+        {
+          role: "assistant",
+          content: "",
+          timestamp: new Date(),
+          loading: true,
+          citations: [],
+          chunks: [],
+          ui: undefined,
+        },
+      ]),
+    );
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => scrollToBottom(), 80);
 
     try {
       setIsStreaming(true);
@@ -119,7 +133,7 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
               {
                 ...last,
                 citations: meta.citations ?? last.citations ?? [],
-                chunks: meta.chunks ?? last.chunks ?? [],
+                chunks: compactSourceChunks(meta.chunks ?? last.chunks ?? []),
                 ui: meta.ui ?? last.ui,
               },
             ];
@@ -159,7 +173,10 @@ export function useChatSession(kbId: string, getChatParams: () => ChatParams) {
       return false;
     } finally {
       setIsStreaming(false);
-      setTimeout(() => scrollToBottom(), 80);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      scrollTimeoutRef.current = setTimeout(() => scrollToBottom(), 80);
     }
   };
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { env } from "@/lib/env";
 import { useHomeStore } from "@/store";
@@ -17,6 +17,8 @@ export function useMcpConnection(kbId: string) {
   const [mcpCopiedField, setMcpCopiedField] = useState<McpCopyField | null>(
     null,
   );
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const mcpUrl = `${env.VITE_BASE_URL.replace(/\/$/, "")}/mcp`;
 
@@ -64,11 +66,28 @@ export function useMcpConnection(kbId: string) {
       await navigator.clipboard.writeText(value);
       setMcpCopiedField(field);
       toast.success(`${label} copied to clipboard`);
-      setTimeout(() => setMcpCopiedField(null), 2000);
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = setTimeout(
+        () => setMcpCopiedField(null),
+        2000,
+      );
     } catch {
       toast.error(`Could not copy ${label}`);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     isMcpDialogOpen,

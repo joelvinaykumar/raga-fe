@@ -37,9 +37,12 @@ function RouteComponent() {
   >({});
   const [loadingData, setLoadingData] = useState(false);
 
-  const fetchFileProgress = async (kbs: KnowledgeBase[]) => {
+  const fetchFileProgress = async (
+    kbs: KnowledgeBase[],
+    cancelled?: () => boolean,
+  ) => {
     if (!kbs.length) {
-      setFileProgressByKb({});
+      if (!cancelled?.()) setFileProgressByKb({});
       return;
     }
 
@@ -57,7 +60,9 @@ function RouteComponent() {
         );
         return [kb.rag_id, { count, progress }] as const;
       });
-      setFileProgressByKb(Object.fromEntries(inlineResults));
+      if (!cancelled?.()) {
+        setFileProgressByKb(Object.fromEntries(inlineResults));
+      }
       return;
     }
 
@@ -78,25 +83,32 @@ function RouteComponent() {
       }),
     );
 
-    setFileProgressByKb(Object.fromEntries(results));
+    if (!cancelled?.()) {
+      setFileProgressByKb(Object.fromEntries(results));
+    }
   };
 
-  const fetchKnowledgeBases = async () => {
+  const fetchKnowledgeBases = async (cancelled?: () => boolean) => {
     setLoadingData(true);
     try {
       const res = await axios.get("/rag/all/");
       const kbData: KnowledgeBase[] = Array.isArray(res.data) ? res.data : [];
+      if (cancelled?.()) return;
       setKnowledgeBases(kbData);
-      await fetchFileProgress(kbData);
+      await fetchFileProgress(kbData, cancelled);
     } catch (_error) {
       // error handling is done globally in axios interceptor
     } finally {
-      setLoadingData(false);
+      if (!cancelled?.()) setLoadingData(false);
     }
   };
   // biome-ignore lint/correctness/useExhaustiveDependencies: fetch list once when layout mounts
   useEffect(() => {
-    fetchKnowledgeBases();
+    let cancelled = false;
+    fetchKnowledgeBases(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (

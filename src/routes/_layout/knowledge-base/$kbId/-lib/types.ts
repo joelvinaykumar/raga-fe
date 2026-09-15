@@ -77,3 +77,27 @@ export type StartEvalResponse = {
   rag_id: string;
   status: EvalStatus;
 };
+
+/** Keep the last N messages in the workspace so long sessions cannot grow unbounded. */
+export const MAX_RENDERED_MESSAGES = 200;
+
+const CHUNK_PREVIEW_CHARS = 280;
+
+/** Drop full retrieved chunk bodies; the UI only needs a short preview. */
+export function compactSourceChunks(
+  chunks?: SourceChunkMeta[],
+): SourceChunkMeta[] | undefined {
+  if (!chunks?.length) return chunks;
+  return chunks.map((chunk) => ({
+    ...chunk,
+    preview:
+      chunk.preview ||
+      (chunk.content ? chunk.content.slice(0, CHUNK_PREVIEW_CHARS) : null),
+    content: "",
+  }));
+}
+
+export function capMessages(messages: Message[]): Message[] {
+  if (messages.length <= MAX_RENDERED_MESSAGES) return messages;
+  return messages.slice(-MAX_RENDERED_MESSAGES);
+}

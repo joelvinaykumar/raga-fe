@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "@/lib/axios";
 import type { PromptSuggestionCard, RagInfo } from "../-lib/types";
+import { capMessages, compactSourceChunks } from "../-lib/types";
 import {
   FALLBACK_PROMPTS,
   isValidRagId,
@@ -80,6 +81,7 @@ export function useKnowledgeBaseWorkspace(
     if (!sessionId) return;
 
     let cancelled = false;
+    let scrollTimer: ReturnType<typeof setTimeout> | undefined;
 
     const loadWorkspace = () => {
       setIsHistoryLoading(true);
@@ -127,20 +129,26 @@ export function useKnowledgeBaseWorkspace(
 
           if (historyRes.data) {
             setMessages(
-              historyRes.data.map((msg: any) => ({
-                role: msg.role || "user",
-                content: msg.content || "",
-                timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
-                loading: false,
-                citations: Array.isArray(msg.citations) ? msg.citations : [],
-                chunks: Array.isArray(msg.chunks) ? msg.chunks : [],
-                ui:
-                  msg.ui &&
-                  typeof msg.ui === "object" &&
-                  Array.isArray(msg.ui.blocks)
-                    ? msg.ui
-                    : undefined,
-              })),
+              capMessages(
+                historyRes.data.map((msg: any) => ({
+                  role: msg.role || "user",
+                  content: msg.content || "",
+                  timestamp: msg.timestamp
+                    ? new Date(msg.timestamp)
+                    : new Date(),
+                  loading: false,
+                  citations: Array.isArray(msg.citations) ? msg.citations : [],
+                  chunks: compactSourceChunks(
+                    Array.isArray(msg.chunks) ? msg.chunks : [],
+                  ),
+                  ui:
+                    msg.ui &&
+                    typeof msg.ui === "object" &&
+                    Array.isArray(msg.ui.blocks)
+                      ? msg.ui
+                      : undefined,
+                })),
+              ),
             );
           }
 
@@ -180,7 +188,7 @@ export function useKnowledgeBaseWorkspace(
         .finally(() => {
           if (!cancelled) {
             setIsHistoryLoading(false);
-            setTimeout(
+            scrollTimer = setTimeout(
               () => scrollRef.current?.scrollIntoView({ behavior: "smooth" }),
               100,
             );
@@ -192,6 +200,9 @@ export function useKnowledgeBaseWorkspace(
 
     return () => {
       cancelled = true;
+      if (scrollTimer) {
+        clearTimeout(scrollTimer);
+      }
     };
   }, [
     kbId,

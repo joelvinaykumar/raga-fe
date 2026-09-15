@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import axios from "@/lib/axios";
 import type { RagEvaluation, StartEvalResponse } from "../-lib/types";
@@ -117,6 +117,13 @@ export function useRagEvaluation(kbId: string) {
       // Other errors are toasted by the axios interceptor.
     }
   }, [isEvaluating, kbId, poll]);
+
+  useEffect(() => {
+    return () => {
+      activeEvalIdRef.current = null;
+      stopPolling();
+    };
+  }, [stopPolling]);
 
   return {
     isDialogOpen,
